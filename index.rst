@@ -14,10 +14,3 @@
 		Master手册 <Master_Manual.md>
 		用户手册 <User_Manual.md>
 
-
-索引
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
