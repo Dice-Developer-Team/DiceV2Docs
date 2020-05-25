@@ -22,6 +22,7 @@ from recommonmark.transform import AutoStructify
 project = 'Dice!'
 copyright = '2020, Suhui & Shiki'
 author = 'Suhui & Shiki'
+master_doc = 'index'
 
 # The full version, including alpha/beta/rc tags
 release = '2.4.0'
