@@ -265,7 +265,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 .strBotOn {self}开始工作了
 .strAddGroup Shiki(Judgement), Servant Ruler, 四季映姫·ヤマザナドゥ。来，细数你的罪孽吧
 .strRollFumble 大失败 就像是见了阎王一样
-.strNameSet 以后就称呼{0}的名称为{1}了
+.strNameSet 以后就称呼{nick}的名称为{new_nick}了
 ```
 
 ![](_static/demo_str.png)
@@ -349,7 +349,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 	"strReplyDel":"{self}对关键词{key}的回复已清除√",
 	"strStModify":"{self}对已记录{pc}的属性变化:",		//存在技能值变化情况时，优先使用此文本
 	"strStDetail":"{self}对已设置{pc}的属性：",		//存在掷骰时，使用此文本(暂时无用)
-	"strStValEmpty":"{self}未记录{attr}原值×",		//{0}为属性名
+	"strStValEmpty":"{self}未记录{attr}原值×",		//{attr}为属性名
 	"strBlackQQAddNotice":"{user_nick}，你已被{self}加入黑名单，详情请联系Master",				
 	"strBlackQQAddNoticeReason":"{user_nick}，由于{reason}，你已被{self}加入黑名单，申诉解封请联系管理员",
 	"strBlackQQDelNotice":"{user_nick}，你已被{self}移出黑名单，现在可以继续使用了",
