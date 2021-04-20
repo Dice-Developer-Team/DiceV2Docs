@@ -1,124 +1,247 @@
-## Dice! Master手册
+# Dice! Master手册
 
-*For Ver 2.4.0*
+*这是Dice!于2021.4.20更新2.5.1后对应的[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)*。用户指令请参考[用户手册](https://shiki.stringempty.xyz/Manual/Shiki_User_Manual.html)。更多内容可参看kokona论坛[https://forum.kokona.tech/](https://forum.kokona.tech/)。**本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
+
+### 目录
+
+- [更新说明](#更新说明2.5.1)
+  - [从低版本升级到2.5.0](#从低版本升级到2.5.0)
+- [框架说明](#QQ框架Dice!2.5.0+)
+- [管理面板](#管理面板)
+- [控制台指令](#控制台指令)
+- [全局配置](#全局配置)
+- [用户策略](#用户策略)
+- [云操作](#云操作)
+- [不良记录](#不良记录)
+- [个性化](#个性化)
+- [支持作者](#支持作者)
+- [附录](#附录)
+- [更新历史](#更新历史)
+- [后记](#后记)
+
+### 更新说明(2.5.1)
+
+- 优化{pc}丢失、群昵称获取失败等问题
+- 扩展通知窗口级别，允许.send notice
+- 允许自定义定时任务
+- 优化lua跨平台编码问题
+- lua预设函数新增到18个
+
+#### 更新说明(2.5.0)
+
+- 允许安装lua脚本指令
+- 本体独立于框架，必须由Dice驱动器装载
+- 使用`.admin ListenSelfEcho/ListenGroupEcho`自定义是否接收自己的私聊/群聊消息
+- 补充了对自身的指令频度监控，避免自我响应
+- 使用`.admin GroupInvalidSize`自定义协议无效的群规模
+- 开启对同系Dice的识别
+- 缓存今日人品，允许lua调用
+- 默认自动保存间隔调整为5分钟
+
+### QQ框架(Dice!2.5.0+)
+
+2.5.0版本，Dice!本体由酷Q插件改为了独立于框架的dll，由作为框架插件的DiceDriver加载，具体能实现的接口视框架条件而不同。Dice!驱动器目前支持先驱、Mirai框架，计划支持小栗子。由于不同版本适配进度不同，你可能无法找到以下所有版本。*Miria加载DiceDriver须使用MiraiNative插件。*
+
+#### 选择一个框架
+
+先驱**登录设备占用电脑端**，支持多开，支持扫码登录，QQ账号被腾讯制裁的概率较低。Mirai**可选登录设备**，不能多开，有跨平台版本，MiraiAndroid是当前在**手机挂载Dice**的唯一选择。
+
+##### 框架接口差异
+
+- 先驱(201209)：
+  1. 仅支持PC或企业QQ登录
+  2. 允许扫码登录以规避登录设备异常
+  3. 允许选择启动时自动登录的QQ
+  4. 不能发送讨论组消息
+  5. 不支持设置群头衔
+  6. 不支持发送语音
+  7. 消息自动已读消息，手机端无法正常刷新私聊消息
+  
+- 小栗子(2.9.2)：
+  1. 支持PC/手Q/平板登录
+  2. 无法处理登录设备异常（触发短信验证则可正常登录）
+  3. 不能收发讨论组消息
+  4. 启动时只能选择所有保存的QQ都登录或都不登录
+  6. 主程序弹窗报错后无法正常工作
+  7. 拒绝好友申请无法发送理由
+  7. **后续版本收费**
+  
+- MiraiNative(Mirai2.0）：
+  1. 支持手Q/平板登录
+  2. 不能多开QQ，启动即登录
+  3. 无法处理登录设备异常（但支持设备锁验证）
+  4. 平板登录无法正确识别部分登录失败原因（当前版本过低）
+  5. 不能响应来自自己的消息
+  6. 无法获取未加入群的群名/规模
+  7. 不能收发讨论组消息
+  
+#### 框架目录结构
+
+**先驱与小栗子目录**![先驱目录](_static/intro_xq_dir.png)
+
+**Mirai目录![Mirai目录](_static/intro_mirai2_dir.png)**
+
+#### 从低版本升级到2.5.0+
+
+##### 迁移骰娘存档到整合包
+
+将对应版本的存档目录[DiceData]复制到新框架根目录下。
+
+- 原Dice2.4.0及以上版本：根目录下的Dice[DiceQQ]文件夹
+- 原Dice2.3.8exp9及以上版本酷Q骰娘：根目录下的DiceData文件夹![CQ根目录下的DiceData文件夹](_static/demo_cq_dicedata.png)
+
+如为原Dice2.3.8exp10(555)及以下版本：将data/app/com.w4123.dice复制到新目录[DiceData]/com.w4123.dice的位置。![data/app/com.w4123.dice](_static/demo_cq_appdata.png)
+
+##### 先驱框架就地升级
+
+1. 停止或卸载原有CQXQ插件，或在CQXQ中卸载Dice!
+2. 将Dice.Driver.XQ.dll放入Plugin文件夹
+3. 加载后启用Dice.Driver
+
+##### Mirai2.0框架就地升级
+
+1. 在流泪猫猫头中卸载Dice!
+2. 将Dice.Driver.CQ.dll和Dice.Driver.CQ.json放入\data\MiraiNative\plugins文件夹（加载后自动启用）
+3. (Mirai自旧版升级)将根目录下device.json复制到根目录下（让Mirai继续使用先前的登录信息）
+
+### 管理面板
+
+**任意框架**可对骰娘发送`.system gui`打开图形界面。
+
+(MiraiNative)右键**托盘图标（流泪猫猫头）->（插件菜单）Dice!->综合管理**![Mirai面板入口](_static/demo_mirai_gui_entry.png)
+
+(先驱)**插件扩展->Dice.Driver(右键)->设置插件。单框架多开时请使用指令，避免错乱**![](_static/demo_xq_gui_entry.png)
+
+可在界面内设置Master、调整用户信任、修改CustomMsg文本、修改全局配置
+
+![图形界面1](_static/demo_gui_page1.png)
+
+![图形界面2](_static/demo_gui_page2.png)
 
 ### Master模式
 
 Master是骰娘的控制者，每个骰娘同时至多只能有一个Master。Master可以控制骰娘的发言和行为，并个性化大量配置。受信任用户也可以获得对骰娘的部分权限，但只有Master拥有发放和回收高级权限的权限。
 
-![](_static/demo_app_manager.png)Master功能初始默认关闭，需要在酷Q的应用菜单中切换。
+Master功能初始默认关闭，现在你可以在管理面板完成认主。
 
 #### Master绑定/解绑
 
-Master模式初次开启后为无主状态，此时对骰娘`.master (private/public)` 将绑定身份。  
-`.master (private)` 默认**私骰作成**，将自动开启私用模式  
-`.master public` **公骰作成**，将骰娘初始化为公骰，自动调整相应的配置  
-`.master delete` 解除绑定，骰娘此时会重回无主状态，清空通知窗口，但先前设定的配置不会初始化。  
-`.master reset [新masterQQ]` 解除绑定，骰娘此时会认主[新masterQQ]（原Master保留信任级别）  
+Master模式初次开启后为无主状态，此时对骰娘`.master (private/public)` 将绑定身份。也可直接在管理面板设置Master。
+`.master (private)` 默认**私骰作成**，将自动开启私用模式
+`.master public` **公骰作成**，将骰娘初始化为公骰，自动调整相应的配置
+`.master delete` 解除绑定，骰娘此时会重回无主状态，清空通知窗口，但先前设定的配置不会初始化。
+`.master reset [新masterQQ]` 解除绑定，骰娘此时会认主[新masterQQ]（原Master保留信任级别）
 `.master admin`添加管理时自动将私聊添加为监视窗口，管理可以用`.admin delete`放弃权限，清除窗口可以私聊`.admin notice - me`
 
 ### 控制台指令
 
 #### 状态查看
 
-`.admin state` 可以查看当前的全局设置和黑白名单情况  
+`.admin state` 可以查看当前的全局设置和黑白名单情况
+
 **悬浮窗**：可右键**酷Q菜单->悬浮窗->Dice!->指令频度** 将悬浮窗显示的信息切换为每分钟的指令次数（实际是将5分钟内接受指令平滑化的结果）
 
-#### 遥控开关
+####　遥控开关
 
 - `.admin boton/botoff [群号]` //等效于所在群群管使用.bot on/off
 - `.dismiss [群号]` //可以遥控骰娘退出所在的群，即使骰娘不在，也能将该群移出白名单 
 
 #### 消息发送(.send)
 
-send用于用户与管理员间的远程交流  
-`.send 待发送消息` （任何人可用）向Master发送消息  
-`.send [窗口] [待发送消息]` //向指定窗口发送消息（权限4限定； **权限5用户发送的消息不会标明转发来源，等效于骰娘亲自说话** )
+send用于用户与管理员间的远程交流
+`.send 待发送消息` （任何人可用）向Master发送消息
+`.send [窗口] [待发送消息]` //向指定窗口发送消息（权限4限定；**权限5用户发送的消息不会标明转发来源，等效于骰娘亲自说话 **)
 
 **窗口**是指QQ收发消息的聊天窗口。窗口参数识别一下5种格式:
 
 - qq [QQ号]
 - group [群号]
 - discuss [讨论组号]
+- notice [通知类型]（仅send可用）
 - this（发送指令的窗口）
 - me（发送者的私聊窗口）
 
 #### 消息转发(.link)
 
-link用于管理员与特定窗口保持交流（尤其是新加入、待审核的群），或者操纵骰娘跑团  
-`.link to/from/with [窗口]` 当前窗口向目标窗口单向转发/单向接收/双向转发消息  
-`.link close` 关闭从当前聊天窗口发起的消息转发  
-**转发自Master的消息不会标明转发来源，等效于骰娘亲自说话**  
-**无法确认目标聊天窗口是否存在，可能会导致没有反应**  
-**转发状态没有被写入文件，因此重载应用后会清空**
+link用于管理员与特定窗口保持交流（尤其是新加入、待审核的群），或者操纵骰娘跑团
+`.link to/from/with [窗口]` 当前窗口向目标窗口单向转发/单向接收/双向转发消息
+`.link close` 关闭从当前聊天窗口发起的消息转发
+`.link start` 开启上次建立的链接
+**对象窗口为群/讨论组时，可省略group/discuss，直接输入群号；对象为私聊时，qq可简写为q**
+**转发自Master的消息不会标明转发来源，等效于骰娘亲自说话 **
+**无法确认目标聊天窗口是否存在，可能会导致没有反应**
 
 #### 系统指令(.system)
 
-`.system save` //立即存储所有数据（相当于执行所有停用应用时的操作）  
-`.system load` //立即读取外置文件（模块、牌堆和角色卡模板）。便于不重载应用的反复调试。save/load涉及的文件见附录。  
-``.system state`` //显示插件运行时间及内存占用等硬件信息  
-``.system clrimg`` //（不递归地）删除data\_static\文件夹下所有（文件名长度达32的）图片，但保留被Dice！引用的图片（如welcome）；有其他插件调用缓存图片且不另存于文件夹，**不要使用此命令**以免影响其他插件正常运作；每清除一万张图片大约需要半分钟至一分钟，**避免在业务繁忙时使用此命令**。**权限5可用**。  
-`.system reload` //立即保存数据后令酷Q进程自杀并快速重启。第一次使用请保持远程连接监控，如重启后出现黄色提示框提醒上次未正常退出，请勾选【不再提醒】并确认，以免耽误重启。**Linux容器内的酷Q存在无法勾选的情况，请慎用**。**权限5可用**。  
+`.system save` //立即存储所有数据（相当于执行所有停用应用时的操作）
+`.system load` //立即读取外置文件（模块、牌堆和角色卡模板）。便于不重载应用的反复调试。save/load涉及的文件见附录。
+``.system state`` //显示插件运行时间及内存占用等硬件信息
+``.system clrimg`` //（不递归地）删除data\image\文件夹下所有（文件名长度达32的）图片，但保留被Dice！引用的图片（如welcome）；有其他插件调用缓存图片且不另存于文件夹，**不要使用此命令**以免影响其他插件正常运作；每清除一万张图片大约需要半分钟至一分钟，**避免在业务繁忙时使用此命令**。**权限5可用**。
+`.system reload` //立即保存数据后令框架（先驱）重载插件。第一次使用请保持远程连接监控，如重启后出现黄色提示框提醒上次未正常退出，请勾选【不再提醒】并确认，以免耽误重启。**权限5可用**。
 `.system rexplorer` //杀死资源管理器后重启。当 Windows 服务器内存占用逐渐随时间而升高时，考虑由资源管理器逐渐占用内存导致，可能适用该指令。**权限5可用**。
-
-#### 查看更新(.cloud update)
-
-远程获取Dice!正式版及开发版信息  
-`.cloud update` //检查版本更新  
-`.cloud update release` //下载最新发布版  
-`.cloud update dev` //下载最新开发版（请保持与开发者的交流）
 
 #### 一键清群(.master groupclr)
 
-遍历群列表并退出符合条件的群，**也可以在应用菜单中【一键清退】**。群列表上限500，**请避免群数超过500**  
-`.master groupclr` 可以实现一键退群，无参数时默认参数为unpower  
-`.master groupclr [天数]` 将退出当前所有**骰娘在指定天数内未发言**的群  
-`.master groupclr unpower` 将退出当前所有**骰娘不是群管/群主**的群  
-`.master groupclr preserve` 将退出当前所有**无许可使用**的群  
+遍历群列表并退出符合条件的群，**也可以在应用菜单中【一键清退】**。群列表上限500，**请避免群数超过500**
+`.master groupclr` 可以实现一键退群，无参数时默认参数为unpower
+`.master groupclr [天数]` 将退出当前所有**骰娘在指定天数内未发言**的群
+`.master groupclr unpower` 将退出当前所有**骰娘不是群管/群主**的群
+`.master groupclr preserve` 将退出当前所有**无许可使用**的群
 `.master groupclr black` 将退出当前所有**黑名单群**和**有危险的黑名单用户**的群
 
 ### 全局配置
 
-配置项目表见附录  
-`.admin [关键词]` //查看配置项状态，如.admin Private  
-`.admin [关键词]=[数值]` //修改配置项。一般1表示开启，0表示关闭
+配置项目表见[附录](#配置项目表)
+`.admin [关键词]` //查看配置项状态，如.admin Private
+`.admin [关键词]=[数值]` //修改配置项。一般的开关项1表示开启，0表示关闭
 
 #### 通知窗口
 
-运行过程中产生的提醒、警告等通知消息会分类型发送给设置的通知窗口。所有通知被分为0-5六种类型（具体通知类型见附录）。当产生通知时，会向通知窗口中所有接收该类型通知的窗口发送消息。如果没有窗口能发送消息，骰娘会将通知发送给自己；无论如何所有通知会自动保存在"DiceData\audit"中，请定期整理该文件夹。
-
-`.admin notice [窗口] +/-[通知类型](...+/-[通知类型])` //增减通知窗口类型  
+运行过程中产生的提醒、警告等通知消息会分类型发送给设置的通知窗口。所有通知被分为0-9共十个等级，其中0-5会被骰娘用于内置广播，6-9用于自定义（具体通知类型见[附录](#通知类型表)）。当产生通知时，会向通知窗口中所有接收该类型通知的窗口发送消息。如果没有窗口能发送消息，骰娘会将通知发送给自己；无论如何所有通知会自动保存在"[DiceData]\audit"中，请定期整理该文件夹。
+`.admin notice [窗口] +/-[通知类型](...+/-[通知类型])` //增减通知窗口类型
 `.admin notice - [窗口]` //直接移除指定窗口。
+`.send notice [通知类型] [通知文本]` //向指定类型窗口广播通知
 
 例:
-- `.admin notice group 754494359 -0-1-2-3-4+5` 变更通知类型的接收情况  
-- `.admin notice - this` 直接移除当前通知窗口
+`.admin notice group 754494359 -0-1-2-3-4+5` 变更通知类型的接收情况
+`.admin notice - this` 直接移除当前通知窗口
 
 #### 全局开关(.admin DisabledGlobal=0/1)
 
 DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，关闭则进入静默状态，所有群聊/讨论组会相当于.bot off状态而无视群内设置，私聊会回复关闭中的信息。也可以用.admin on/off 操作全局开启/关闭，也可以在应用菜单中点击"全局开关"自动切换。
 
-#### 定时事件(.admin clock)
+#### 定时点事件(.admin clock)
 
-`.admin clock +/- on/off/save/clear [时]:[分]`  添加/移除 定时 全局开启/全局关闭/保存/清群  
-每日执行，如果当日错过不会补回。  
-定时开启和定时关闭时会向窗口4发送通知文本  
+`.admin clock +/- [任务名] [时]:[分]`  添加/移除 定时任务
+内置定时任务:on-全局开启;off-全局关闭;clear-黑名单清群
+允许调用自定义任务，参考plugin手册
+每日执行，如果当日错过不会补回。
+定时开启和定时关闭时会向窗口4发送通知文本
 清群为基于黑名单清群(=.master groupclr black)
+
+#### 定时长事件
+
+以下事件会在Dice!每运行固定时间后执行一次
+`.admin AutoSaveInterval=10` //定时保存(min)，默认每十分钟保存一次
+`.admin AutoClearImage=0` //定时清理图片(h)，默认关闭。作为参照，每120小时清理一次，清理量大约在10000~20000。
+`.admin AutoRemake=0` //定时重启(h)，默认关闭。
+**定时系统监测报警**(.admin SystemAlarmRAM/SystemAlarmCPU/SystemAlarmDisk=90) ：每半小时监测一次系统内存、CPU、硬盘占用(%)，超过阈值即报警。报警状态下每5分钟监测一次，如果数值升高超过1个百分点则继续报警，低于阈值则会提醒解除报警。设置在1-99时生效。
+
 
 ### 用户策略
 
 #### 用户记录(.user)
-用户在使用指令或被授予信任后会生成用户记录  
-`.user state` //查看自己用户记录  
-`.user trust [用户qq]` //查看用户信任级别（4以上限定，上级对下级屏蔽）  
-`.user trust [用户qq] [信任级别]` //调整用户信任级别（4以上限定，只能调整下级用户）
+用户在使用指令或被授予信任后会生成用户记录
+`.user state` //查看自己用户记录
+`.user trust [用户qq]` //查看用户信任级别（4以上限定，上级对下级屏蔽）
+`.user trust [用户qq] [信任级别]` //调整用户信任级别（4以上限定，只能调整下级用户，最高为255）
+`.user diss [用户qq]` //拉黑用户(type=local,danger=1)
 
 ##### 用户授信(.user trust)
 
 每名登记用户会标记信任级别，初始为0。级别越高享受的权限越多，上级包含下级的所有权限。
 
 `.admin whiteqq (-) [白名单QQ]` 可以为用户授予信任1(带减号为收回信任)
-
 
 ```eval_rst
 +-------------------+--------------------------------------------------+
@@ -140,7 +263,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 默认开启，仅好友验证方式为【需要验证信息】或【需要回答问题并由我确认】时有效，拦截消息并决定通过或拒绝。黑名单用户必定拒绝。同意好友邀请时将发送strAddFriend，特别地，通过受信任用户的好友时会发送strAddFriendWhiteQQ。当好友验证方式为【允许任何人】或【需要正确回答问题】时，通过开启**ListenFriendAdd**，也会向通过的好友发送strAddFriend，注意这种方式通过的好友可能仅为单向好友。
 
-##### 允许陌生好友邀请(.admin AllowStranger=1/2)
+#####　允许陌生好友邀请(.admin AllowStranger=1/2)
 
 默认为1。决定是否接受陌生人的好友邀请：2-无条件接受;1-无用户记录不接受;0-无信任不接受。该项设定建议配合QQ自带的【允许陌生人邀请我加入群聊】选项。
 
@@ -162,6 +285,8 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 +----------------------------------------------------+--------------------------------------------------+------------+
 | 忽略                                               | 不接受任何该群的事件                             | 信任4      |
 +----------------------------------------------------+--------------------------------------------------+------------+
+| 协议无效                                           | 不接受除云黑外的事件                             | 信任4      |
++----------------------------------------------------+--------------------------------------------------+------------+
 | 停用指令                                           | 停止响应指令和'.'开头的回复（即.bot off）        | 信任或群管 |
 +----------------------------------------------------+--------------------------------------------------+------------+
 | 禁用回复                                           | 停止响应自定义回复                               | 信任或群管 |
@@ -179,81 +304,149 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 ##### 授权许可(!authorize)
 
-受信任用户可通过在群内发送!authorize或在任意窗口发送!authorize +[群号]来为目标群添加【许可使用】。非信任用户也可在群内使用!authorize [理由]向窗口2发送许可申请。  
-`!authorize (+[群号])` //受信任用户为本群+许可使用  
+受信任用户可通过在群内发送!authorize或在任意窗口发送!authorize +[群号]来为目标群添加【许可使用】。非信任用户也可在群内使用!authorize [理由]向窗口2发送许可申请。
+`!authorize (+[群号])` //受信任用户为本群+许可使用
 `!authorize (+[群号]) [理由]`  //非信任用户申请本群许可
 
-#### 监听群邀请(.admin ListenGroupRequest=1)
+#### 批量群处理(.groups)
 
-默认开启。接收用户的群邀请（**小群邀请**将由QQ系统自动通过，因此骰娘无法处理或知晓邀请人），拒绝来自黑名单的邀请，邀请来自受信任用户时通过且自动为群添加【许可使用】，非信任用户时私用模式而定。通过邀请的同时标记邀请人。
+取群列表.groups list(管理限定)
+.groups list idle //按闲置天数降序列出群
+.groups list size //按群规模降序列出群
+.groups list [群管词条] //列出带有词条的群
+
+####　监听群邀请(.admin ListenGroupRequest=1)
+
+默认开启。接收用户的群邀请（**小群邀请**将由QQ系统自动通过，因此骰娘无法处理或知晓邀请人），拒绝来自黑名单的邀请，邀请来自受信任用户时通过且自动为群添加【许可使用】，非信任用户时私用模式而定。通过邀请的同时标记邀请人。**如果回执为【已同意】却实际并未入群，考虑接口出错或腾讯屏蔽。**
 
 #### 入群检测(.admin ListenGroupAdd=1)
 
-默认开启。遍历群员，获取群主信息（临时创建的群可能无法获取群管理信息）、检索黑名单，为私用模式二次确认【许可使用】，为审核模式检查【许可使用】。发送strAddGroup。
+默认开启。入群时反馈群信息（群名、群号、群人数、邀请人），遍历群员，获取群主信息（临时创建的群可能无法获取群管理信息）、检索黑名单，为私用模式二次确认【许可使用】，为审核模式检查【许可使用】；群内发现黑名单时会通知，有管理员是黑名单时会触发退群（群未设置【免清】或【免黑】时）。发送strAddGroup。
 
 #### 私用模式(.admin Private=1)
 
 认主时私骰作成进入私用模式，仅在**受信任**用户或【许可使用】群邀请时接受邀请，在**新加入管理员无信任用户**（否则为群自动添加【许可使用】）且**无【许可使用】的群**时自动退出，退出时自动留言。也可以用`.admin only/public` 切换私用/公用状态。
 
 #### 审核模式(.admin CheckGroupLicense=1/2)
-入群后，对于无【许可使用】的群，将自动标记【未审核】并发送strAddGroupNoLicense。该项生效时将拒绝提供除help之外的其他服务，其余指令仅authorize/dismiss/bot有效。该项为1时拒绝所有【未审核】的群（不溯及审核模式开启前已加入的群），该项为1时拒绝所有无【许可使用】的群（含开启前已加入的群）。
-
+入群后，对于无【许可使用】的群，将自动标记【未审核】并发送strAddGroupNoLicense。该项生效时将拒绝提供除help之外的其他服务，其余指令仅authorize/dismiss/bot有效。该项为1时拒绝所有【未审核】的群（不溯及审核模式开启前已加入的群），该项为2时拒绝所有无【许可使用】的群（含开启前已加入的群）。
 **审核模式与私用模式的差别**：
 
 - 审核模式会在未许可群停留，增加潜在风险
 - 留在群内有更高向用户群引流的概率
 - 由于自动入群的小群无法正常给群加【许可使用】，骰娘在无法识别群管理的情况下会自动退群，需要受信任用户额外使用一次!authorize [群号]，重复邀请
 
-#### 入群检测(.admin ListenGroupAdd=1)
-
-默认开启。入群时反馈群信息（群名、群号、群人数、邀请人）；群内发现黑名单时会通知，有管理员是黑名单时会触发退群（群未设置【免清】或【免黑】时）。
-
 #### 自动退出讨论组(.admin LeaveDiscuss=1)
 
-开启**LeaveDiscuss**后，只要讨论组有人发言，就会自动退出讨论组。但开启后始终无人发言的讨论组无法处理，只能手动处理。*讨论组具有许多不适应酷Q的机制，如无法获取讨论组列表，无法获取邀请信息，无法获取成员列表，无法自动检测被踢。*
+开启**LeaveDiscuss**后，只要讨论组有人发言，就会自动退出讨论组。但开启后始终无人发言的讨论组无法处理，只能手动处理。*讨论组具有许多不适应QQ框架的机制，如无法获取讨论组列表，无法获取邀请信息，无法获取成员列表，无法自动检测被踢。*
 
-#### 黑名单(.admin blackqq/blackgroup)
+####　黑名单(.admin blackqq/blackgroup)
 
-任何情况下，来自黑名单的邀请不会被通过，指令除了dismiss都不会被响应  
-`.admin blackgroup (-) ([黑名单理由]) [黑名单群号]` 可以添加群黑名单(带减号是删除)  
-`.admin blackqq (-) ([黑名单理由]) [黑名单QQ]` 可以添加用户黑名单(带减号是删除)，带理由时危险等级为2且通知对方，否则危险等级为1。  
-`.admin blackfriend` //查看好友列表内的黑名单用户  
-**危险**的黑名单用户包括**群内权限更高**的用户或**非免清群内相同权限用户（可选）**，同时危险等级需要达到2。危险等级只有1的黑名单用户不通知、不会触发退群。  
+任何情况下，来自黑名单的邀请不会被通过，指令除了dismiss都不会被响应
+`.admin blackgroup (-) ([黑名单理由]) [黑名单群号]` 可以添加群黑名单(带减号是删除)
+`.admin blackqq (-) ([黑名单理由]) [黑名单QQ]` 可以添加用户黑名单(带减号是删除)，带理由时危险等级为2且通知对方，否则危险等级为1。
+`.admin blackfriend` //查看好友列表内的黑名单用户
+**危险**的黑名单用户包括**群内权限更高**的用户或**非免清群内相同权限用户（可选）**，同时危险等级需要达到2。危险等级只有1的黑名单用户不通知、不会触发退群。
 *现在自己、Master、信任2以上用户都不会新加入黑名单。*
 
-#### 不良行为检测(.admin ListenGroupLick/ListenGroupBan/ListenGroupSpam=1)
+####　不良行为检测(.admin ListenGroupKick/ListenGroupBan/ListenSpam=1)
 
 默认开启。分别开启后，移出、禁言、刷屏会被加入黑名单。生成危险等级2的不良记录后，会自动向通知5窗口广播生成的!warning指令。**warning指令**：接收到信任3或记录可识别的骰娘warning时，骰娘将自动录入黑名单。骰娘通过这一机制实现不良记录的传递共享。
-拉黑群时会自动移除【许可使用】。  
+拉黑群时会自动移除【许可使用】。
 *刷屏在程序内定义为发送指令超过20/30s，实际解释权归Master所有*
 
 ####  邀请人连带(.admin KickedBanInviter/BannedBanInviter=1)
 
-默认开启。被移出、禁言时将入群邀请者同时加入黑名单。  
+默认开启。被移出、禁言时将入群邀请者同时加入黑名单。
 *邀请者责任源于协议中不得擅自拉群的规定，这里的擅自是双向的：一边无视骰娘协议，一边无视群内意愿*
 
+### 云操作(.cloud)
+
+#### 查看更新(.cloud update)
+
+远程获取Dice!exp正式版及开发版信息
+`.cloud update` //检查版本更新
+`.cloud update release` //下载最新发布版
+`.cloud update dev` //下载最新开发版（使用测试版/开发版请保持与开发者的交流）
+
+#### 同步不良记录(.cloud black)
+
+该指令会从后台获取经核验的不良记录，并更新本地黑名单库。骰娘不会自动同步云端记录。
+
+### 不良记录
+
+#### 不良记录上传(.admin CloudBlackShare=1)
+
+**该选项默认开启。**开启时，当骰娘原生生成Kick/Ban/Spam记录时，会同时向后台发送该记录。记录在后台收录后处于待核验状态，需要后台管理二次核验才会对其他骰娘生效。所有云记录有唯一的wid。*上传可能因连接后台失败而失败。*对于生成记录过于频繁，或不良记录源于非Dice!原因与用户产生不良互动的，后台会拒绝收录该骰娘的记录。
+
+“**同步云不良记录同步失败**”的处理方式：手动访问url指向的网页，本地另存为后，参考下文【读取外源记录文件】的方式手动读取。
+
+**该选项开启时，其他QQ发送云端已核验的记录也会对该骰娘生效。**
+
+#### 读取外源记录文件
+
+将其他来源的不良记录BlackList.json重命名为BlackListEx.json，放置于\[DiceData]/conf目录下。Dice!加载时会自动读取并更新记录，之后该文件会被销毁。两种情况下已有记录不会在读取时更新：DiceMaid就是自己；危险等级与本地记录不同。
+
+#### 云记录注销
+
+当前记录核销在群(754494359)内完成，入群后私聊Shiki(Justice)(2131847004)，以下指令是有效的：
+- isbanqq=[qq] 查询目标QQ的云记录
+- 查询wid=[wid] 获取wid对应的记录
+- erase=[wid] 注销wid对应的记录，仅记录中的当事骰娘(DiceMaid)和骰主(masterQQ)可用
+
+也可请求管理来完成注销，最通用证明材料为：当事人对当事骰娘发送.admin isban [本人QQ]，连同骰娘回复将聊天记录转发给管理。
+
+#### 用户自行解黑
+
+云记录核销之后，所有骰娘并不会自动同步。遇到尚未注销黑名单的骰娘，请用户自行解黑。方法为**对已注销的骰娘发送.admin isban [QQ]**，将得到的warning指令保存，用于私聊未注销的骰娘。由于骰娘存在连接后台失败的可能，导致无法获取记录更新的信息，因此无法保证指令有效。这时请联系相应骰主。
+
+### 其他机制
+
+#### 消息发送间隔(.admin SendIntervalIdle=500)
+
+一般地，Dice!的待发送QQ消息不会立即发送，而是进入发送队列排队发送，并在每次发送后等待固定时间，即发送间隔(ms)。
+
+特别地，Dice!识别一条待发送消息中的分页符(`'\f'`)，并沿分页符将消息拆成多条，依序送入消息发送队列。分页符无法在指令输入时直接录入，可以输入{FormFeed}作为消息分段，调用时会自动转义。
 
 ### 个性化
 
+#### 扩展指令
+
+扩展脚本可放入[DiceData]/plugin/读取。文件样例见附录，更多内容请参阅[脚本手册]()。默认可使用`.help扩展指令` 查询载入的指令。
+
 #### 自定义帮助词条(.helpdoc)
 
-`.helpdoc [词条名] [词条内容]` —— 自定义帮助词条  
-词条内容以&开头表示重定向，如.helpdoc 追仙子 &追仙后，.help追仙子 将重定向到追仙的词条  
+`.helpdoc [词条名] [词条内容]` —— 自定义帮助词条
+词条内容以&开头表示重定向，如.helpdoc 追仙子 &追仙后，.help追仙子 将重定向到追仙的词条
 词条名**不需要是源代码中已有的**，请随意添加
 
-**外置帮助文档**可放入DiceData/mod/读取。文件样例见附录。
+**外置帮助文档**可放入[DiceData]/mod/读取。文件样例见附录。
+
+特别地，部分词条会存在引用的情况，自定义时可以只自定义被引用的词条。
+
+```json
+{
+    "设定":"Master：{master_QQ}\n好友申请：需要使用记录\n入群邀请：黑名单制，非黑即入\n讨论组使用：允许\n移出反制：拉黑群和操作者\n禁言反制：默认拉黑群和群主\n刷屏反制：警告\n邀请人责任：有限连带\n窥屏可能：{窥屏可能}\n其他插件：{其他插件}{姐妹骰}\n骰娘用户群:{骰娘用户群}\n私骰分享群：863062599 192499947\n开发交流群：1029435374",
+    "骰娘用户群":"【未设置】",
+    "窥屏可能":"无",
+    "其他插件":"【未设置】"
+}
+```
+
+
 
 #### 自定义回复(.reply)
 
-当存在触发词与收到的消息完全一致时，将随机选择一项回复发送。当群内开启【禁用回复】时，不会响应回复。**触发回复也会算入刷屏计数！**  
-`.reply [触发词] [回复文本1](...[回复文本N])` //收到触发词后，从N项回复中随机取一项  
+当存在触发词与收到的消息完全一致时，将随机选择一项回复发送。当群内开启【禁用回复】时，不会响应回复。**触发回复也会算入刷屏计数！**
+`.reply [触发词] [回复文本1](|[回复文本2](...|[回复文本N]))` //收到触发词后，从N项回复中随机取一项，所有回复使用"|"分隔
 `.reply [触发词]` //清除触发词
+
+回复以"."开头时，还会受到群指令开关的调节。默认可使用`.help回复列表 查询载入的指令
 
 #### 自定义回执文本(.str)
 
-将系统处理事件的回执替换为自定义文本  
-`.[键值] [文本]` ——自定义骰娘的某类回执  
-`.[键值] NULL` ——自定义文本为空白  
+将系统处理事件的回执替换为自定义文本
+`.[键值] [文本]` ——自定义骰娘的某类回执
+`.[键值] NULL` ——自定义文本为空白
 `.[键值] show` ——查看自定义文本
 
 **强烈建议自定义strHlpMsg和strAddFriend、strAddGroup，向不熟悉的用户介绍私骰的特别之处（申请、使用须知）**
@@ -265,262 +458,365 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 .strBotOn {self}开始工作了
 .strAddGroup Shiki(Judgement), Servant Ruler, 四季映姫·ヤマザナドゥ。来，细数你的罪孽吧
 .strRollFumble 大失败 就像是见了阎王一样
-.strNameSet 以后就称呼{nick}的名称为{new_nick}了
+.strNameSet 以后就称呼{0}的名称为{1}了
 ```
 
 ![](_static/demo_str.png)
 
 **如果没有设置，strSelfName和strSelfCall将预设为QQ昵称，并且{self}会自动替换为strSelfCall**
 
+#### 自定义敏感词库(.admin censor)
+
+敏感词设置.admin censor
+.admin censor +([触发等级])=\[敏感词0](|[敏感词1]...) //添加敏感词
+.admin censor -\[敏感词0](|[敏感词1]...) //移除敏感词
+例:.admin censor +=nmsl //将“nmsl”设置为Warning级
+.admin censor +Danger=nn老公|nn主人 //将“nn老公”、“nn主人”设置为Danger级
+.admin censor -手枪 //移除敏感词“手枪”
+
+##### 匹配机制
+
+骰娘会模糊匹配指令标识符(.)开头的消息，并返回所含敏感词的最高触发等级
+匹配过程自动跳过文本中的特殊符号和空格，且大小写不敏感
+受信任用户会相应降低触发等级，信任4以上用户将不触发检测
+
+#####  触发等级
+
+*使用指令设置Ignore等级可以临时屏蔽词库中不该生效的词，对外置词库这一等级是无意义的*
+Ignore //无视
+Notice //仅在0级窗口通知
+Caution //提醒用户，并在1级窗口提醒
+Warning //【默认等级】警告用户，并在1级窗口提醒
+Danger //警告用户且拒绝指令，并在3级窗口警告
+*请避免为纯字母/数字的敏感词设置较高触发等级，这些字符存在误匹配图片码的可能性
+
+#####  词库批量加载
+
+load会读取存档目录中/conf/censor下所有文本文件
+字符编码默认按GBK读取，若字符为UTF8，可在开头先起一行"#UTF8"
+一词一行
+触发等级默认为Warning，读取到"#[触发等级]"时，后续录入的词调整为响应等级，如"#Danger"
+
+**词库文件示例**：
+以下内容表示以utf-8编码，读取4个敏感词 "nmsl":Warning,"nn老公":Danger,"nn主人":Danger,"sb":Notice
+
+```txt
+#UTF8
+nmsl
+#Danger
+nn老公
+nn主人
+#Notice
+sb
+```
+
 #### 外置牌堆
 
-将牌堆文件放入DiceData/PublicDeck内并重启或load，即可使用牌堆内的条目。牌堆名以'_'开头时，无法直接使用draw命令抽取。
+将牌堆文件放入[DiceData]/PublicDeck内并重启或load，即可使用牌堆内的条目。牌堆名以'_'开头时，无法直接使用draw命令抽取。
+
+###　支持作者
+
+溯洄正在为后续的开发计划众筹:[https://afdian.net/@suhuiw4123](https://afdian.net/@suhuiw4123)
+
+[也欢迎在爱发电支持Shiki](https://afdian.net/@dice_shiki):https://afdian.net/@dice_shiki
+
+也可以微信赞赏Shiki:![](_static/wechat_pay_shiki.png)
 
 ### 附录
 
 #### 默认回执文本
 
-可用的键值如下表（已用json格式表出，复制入CustomMsg.json时注意保持格式并**去除注释**）
+可用的键值如下表（**非json格式且极不推荐整个复制放入**，请使用指令或综合管理面板**修改必要的文本**）
 
-```json
+```cpp
 {
-	"strParaEmpty":"参数不能为空×",			//偷懒用万能回复
-	"strParaIllegal":"参数非法×",			//偷懒用万能回复
-	"stranger":"用户",			//{nick}无法获取非空昵称时的称呼
-	"strAdminOptionEmpty":"找{self}有什么事么？{nick}",			//
-	"strGMTableShow":"{self}记录的{table_name}列表：",
-	"strGMTableNotExist":"{self}没有保存的{table_name}记录",
-	"strUserTrustShow":"{user}在{self}处的信任级别为{trust}",
-	"strUserTrusted":"已将{self}对{user}的信任级别调整为{trust}",
-	"strUserTrustDenied":"{nick}在{self}处无权访问对方的权限×",
-	"strUserTrustIllegal":"将目标权限修改为{trust}是非法的×",
-	"strUserNotFound":"{self}无{user}的用户记录",
-	"strGroupAuthorized":"A roll to the table turns to a dice fumble!\nDice Roller {strSelfName}√\n本群已授权许可，请尽情使用本骰娘√\n请遵守协议使用，服务结束后使用.dismiss送出!",
-	"strAddGroupNoLicense":"本群未获{self}许可使用，将自动在群内静默。\n请先.help协议 阅读并同意协议后向运营方申请许可使用，\n否则请管理员使用!dismiss送出{self}\n可按以下格式填写并发送申请:\n!authorize 申请用途:[理由] 我已了解Dice!基本用法，仔细阅读并保证遵守{strSelfName}的用户协议，如需停用指令使用[指令]，用后使用[指令]送出群",
-	"strGroupLicenseDeny":"此群未获{self}许可使用，请先确认协议并申请许可×\n或请管理员使用!dismiss送出{self}",
-	"strGroupLicenseApply":"此群未通过自助授权×\n许可申请已发送√",
-	"strGroupSetOn":"现已开启{self}在此群的“{option}”选项√",			//群内开关和遥控开关通用此文本
-	"strGroupSetOnAlready":"{self}已在此群设置了{option}！",			
-	"strGroupSetOff":"现已关闭{self}在此群的“{option}”选项√",			
-	"strGroupSetOffAlready":"{self}未在此群设置{option}！",
-	"strGroupSetAll":"{self}已修改记录中{cnt}个群的“{option}”选项√",
-	"strGroupDenied":"{nick}在{self}处无权访问此群的设置×",
-	"strGroupSetDenied":"{nick}在{self}处设置{option}的权限不足×",
-	"strGroupSetNotExist":"{self}无{option}此选项×",
-	"strGroupWholeUnban":"{self}已关闭全局禁言√",
-	"strGroupWholeBan":"{self}已开启全局禁言√",
-	"strGroupWholeBanErr":"{self}开启全局禁言失败×",
-	"strGroupUnban":"{self}裁定:{member}解除禁言√",
-	"strGroupBan":"{self}裁定:{member}禁言{res}分钟√",
-	"strGroupBanErr":"{self}禁言{member}失败×",
-	"strGroupNotFound":"{self}无该群记录×",
-	"strGroupNotIn":"{self}当前不在该群或对象不是群！",
-	"strGroupExit":"{self}已退出该群√",
-	"strGroupCardSet":"{self}已将{target}的群名片修改为{card}√",
-	"strGroupCardSetErr":"{self}设置{target}的群名片失败×",
-	"strGroupTitleSet":"{self}已将{target}的头衔修改为{title}√",
-	"strGroupTitleSetErr":"{self}设置{target}的头衔失败×",
-	"strPcNewEmptyCard":"已为{nick}新建{type}空白卡{char}√",
-	"strPcNewCardShow":"已为{nick}新建{type}卡{char}：{show}",//由于预生成选项而存在属性
-	"strPcCardSet":"已将{nick}当前角色卡绑定为{char}√",//{nick}-用户昵称 {pc}-原角色卡名 {char}-新角色卡名
-	"strPcCardReset":"已解绑{nick}当前的默认卡√",//{nick}-用户昵称 {pc}-原角色卡名
-	"strPcCardRename":"已将{old_name}重命名为{new_name}√",
-	"strPcCardDel":"已将角色卡{char}删除√",
-	"strPcCardCpy":"已将{char2}的属性复制到{char1}√",
-	"strPcClr":"已清空{nick}的角色卡记录√",
-	"strPcCardList":"{nick}的角色列表：{show}",
-	"strPcCardBuild":"{nick}的{char}生成：{show}",
-	"strPcCardShow":"{nick}的<{type}>{char}：{show}",	//{nick}-用户昵称 {type}-角色卡类型 {char}-角色卡名
-	"strPcCardRedo":"{nick}的{char}重新生成：{show}",
-	"strPcGroupList":"{nick}的各群角色列表：{show}",
-	"strPcNotExistErr":"{self}无{nick}的角色卡记录，无法删除×",
-	"strPcCardFull":"{nick}在{self}处的角色卡已达上限，请先清理多余角色卡×",
-	"strPcTempInvalid":"{self}无法识别的角色卡模板×",
-	"strPcNameEmpty":"名称不能为空×",
-	"strPcNameExist":"已存在同名卡×",
-	"strPcNameNotExist":"该名称不存在×",
-	"strPcNameInvalid":"非法的人物卡名（存在冒号）×",
-	"strPcInitDelErr":"初始卡不可删除×",
-	"strPcNoteTooLong":"备注长度不能超过255×",
-	"strPcTextTooLong":"文本长度不能超过48×",
-	"strSpamFirstWarning":"你短时间内对{self}指令次数过多！请善用多轮掷骰和复数生成指令（刷屏初次警告）",
-	"strSpamFinalWarning":"请暂停你的一切指令，避免因高频指令被{self}拉黑！（刷屏最终警告）",
-	"strReplySet":"{self}对关键词{key}的回复已设置√",
-	"strReplyDel":"{self}对关键词{key}的回复已清除√",
-	"strStModify":"{self}对已记录{pc}的属性变化:",		//存在技能值变化情况时，优先使用此文本
-	"strStDetail":"{self}对已设置{pc}的属性：",		//存在掷骰时，使用此文本(暂时无用)
-	"strStValEmpty":"{self}未记录{attr}原值×",		//{attr}为属性名
-	"strBlackQQAddNotice":"{user_nick}，你已被{self}加入黑名单，详情请联系Master",				
-	"strBlackQQAddNoticeReason":"{user_nick}，由于{reason}，你已被{self}加入黑名单，申诉解封请联系管理员",
-	"strBlackQQDelNotice":"{user_nick}，你已被{self}移出黑名单，现在可以继续使用了",
-	"strWhiteQQAddNotice":"{user_nick}，您已获得{self}的信任，请尽情使用{self}√",
-	"strWhiteQQDenied":"你不是{self}信任的用户×",
-	"strWhiteGroupDenied":"本群聊不在白名单中×",
-	"strDeckProNew":"已新建自定义牌堆√",
-	"strDeckProSet":"已将{key}设置为默认牌堆√",
-	"strDeckProClr":"已删除默认牌堆√",
-	"strDeckProNull":"默认牌堆不存在!",
-	"strDeckTmpReset":"已重置卡牌√",
-	"strDeckTmpShow":"当前剩余卡牌:",
-	"strDeckTmpEmpty":"已无剩余卡牌！",		//剩余卡牌数为0
-	"strDeckTmpNotFound":"不存在剩余卡牌×",	//没有生成过牌堆
-	"strDeckNameEmpty":"未指定牌堆名×",
-	"strRollDice":"{pc}掷骰: {res}",
-	"strRollDiceReason":"{pc}掷骰 {reason}: {res}",
-	"strRollHidden":"{pc}进行了一次暗骰",
-	"strRollTurn":"{pc}的掷骰轮数: {turn}轮",
-	"strRollMultiDice":"{pc}掷骰{turn}次: {dice_exp}={res}",
-	"strRollMultiDiceReason":"{pc}掷骰{turn}次{reason}: {dice_exp}={res}",
-	"strRollSkill":"{pc}进行{attr}检定：",
-	"strRollSkillReason":"由于{reason} {pc}进行{attr}检定：",
-	"strEnRoll":"{pc}的{attr}增强或成长检定：\n{res}",//{attr}在用户省略技能名后替换为{strEnDefaultName}
-	"strEnRollNotChange":"{strEnRoll}\n{pc}的{attr}值没有变化",
-	"strEnRollFailure":"{strEnRoll}\n{pc}的{attr}变化{change}点，当前为{final}点",
-	"strEnRollSuccess":"{strEnRoll}\n{pc}的{attr}增加{change}点，当前为{final}点",
-	"strEnDefaultName":"属性或技能",	//默认文本
-	"strEnValEmpty": "未对{self}设定待成长属性值，请先.st {attr} 属性值 或查看.help en×",
-	"strEnValInvalid": "{attr}值输入不正确,请输入1-99范围内的整数!",
-	"strSendMsg":"{self}已将消息送出√",//Master定向发送的回执
-	"strSendMasterMsg":"消息{self}已发送给Master√",//向Master发送的回执
-	"strSendMsgEmpty":"发送消息内容为空×",
-	"strSendMsgInvalid":"{self}没有可以发送的对象×",//没有Master
-	"strDefaultCOCClr":"默认检定房规已清除√",
-	"strDefaultCOCNotFound":"默认检定房规不存在×",
-	"strDefaultCOCSet":"默认检定房规已设置:",
-	"strLinkLoss":"{self}的时空连接已断开√",
-	"strLinked":"{self}已创建时空门√",
-	"strLinkWarning":"尝试创建时空门，但不保证能否连通",
-	"strLinkNotFound":"时空门要通向不可名状的地方了×",
-	"strNotMaster":"你不是{self}的master！你想做什么？",
-	"strNotAdmin":"你不是{self}的管理员×",
-	"strDismiss": "",						//.dismiss退群前的回执
-	"strHlpSet":"已为{key}设置词条√",
-	"strHlpReset":"已清除{key}的词条√",
-	"strHlpNameEmpty":"Master想要自定义什么词条呀？",
-	"strHlpNotFound":"{self}未找到指定的帮助信息×",
-	"strClockToWork":"{self}已按时启用√",
-	"strClockOffWork":"{self}已按时关闭√",
-	"strNameGenerator":"{pc}的随机名称：{res}",
-	"strDrawCard": "来看看{pc}抽到了什么：{res}",
-	"strMeOn":"成功在这里启用{self}的.me命令√",
-	"strMeOff":"成功在这里禁用{self}的.me命令√",
-	"strMeOnAlready":"在这里{self}的.me命令没有被禁用!",
-	"strMeOffAlready":"在这里{self}的.me命令已经被禁用!",
-	"strObOn":"成功在这里启用{self}的旁观模式√",
-	"strObOff":"成功在这里禁用{self}的旁观模式√",
-	"strObOnAlready":"在这里{self}的旁观模式没有被禁用!",
-	"strObOffAlready":"在这里{self}的旁观模式已经被禁用!",
-	"strObList":"当前{self}的旁观者有:",
-	"strObListEmpty":"当前{self}暂无旁观者",
-	"strObListClr":"{self}成功删除所有旁观者√",
-	"strObEnter":"{nick}成功加入{self}的旁观√",
-	"strObExit":"{nick}成功退出{self}的旁观√",
-	"strObEnterAlready":"{nick}已经处于{self}的旁观模式!",
-	"strObExitAlready":"{nick}没有加入{self}的旁观模式!",
-	"strQQIDEmpty":"QQ号不能为空×",
-	"strGroupIDEmpty":"群号不能为空×",
-	"strBlackGroup": "该群在黑名单中，如有疑问请联系master",
-	"strBotOn":"成功开启{self}√",
-	"strBotOff":"成功关闭{self}√",
-	"strBotOnAlready":"{self}已经处于开启状态!",
-	"strBotOffAlready":"{self}已经处于关闭状态!",
-	"strRollCriticalSuccess":"大成功！",//一般检定用
-	"strRollExtremeSuccess":"极难成功",
-	"strRollHardSuccess":"困难成功",
-	"strRollRegularSuccess":"成功",
-	"strRollFailure":"失败",
-	"strRollFumble":"大失败！",
-	"strFumble": "大失败!",//多轮检定用，请控制长度
-	"strFailure": "失败",
-	"strSuccess": "成功",
-	"strHardSuccess": "困难成功",
-	"strExtremeSuccess": "极难成功",
-	"strCriticalSuccess": "大成功!",
-	"strNumCannotBeZero": "无意义的数目！莫要消遣于我!",
-	"strDeckNotFound": "是说{deck_name}？{self}没听说过的牌堆名呢……",
-	"strDeckEmpty": "{self}已经一张也不剩了！",
-	"strNameNumTooBig": "生成数量过多!请输入1-10之间的数字!",
-	"strNameNumCannotBeZero": "生成数量不能为零!请输入1-10之间的数字!",
-	"strSetInvalid": "无效的默认骰!请输入1-9999之间的数字!",
-	"strSetTooBig": "这面数……让我丢个球啊!请输入1-9999之间的数字!",
-	"strSetCannotBeZero": "默认骰不能为零!请输入1-9999之间的数字!",
-	"strCharacterCannotBeZero": "人物作成次数不能为零!请输入1-10之间的数字!",
-	"strCharacterTooBig": "人物作成次数过多!请输入1-10之间的数字!",
-	"strCharacterInvalid": "人物作成次数无效!请输入1-10之间的数字!",
-	"strSanRoll":"{pc}的San Check：\n{res}",
-	"strSanRollRes":"{strSanRoll}\n{pc}的San值减少{change}点,当前剩余{final}点",
-	"strSanCostInvalid": "SC表达式输入不正确,格式为成功扣San/失败扣San,如1/1d6!",
-	"strSanInvalid": "San值输入不正确,请输入1-99范围内的整数!",
-	"strSanEmpty": "未设定San值，请先.st san 或查看.help sc×",
-	"strSuccessRateErr":"这成功率还需要检定吗？",
-	"strGroupIDInvalid": "无效的群号!",
-	"strSendErr": "消息发送失败!",
-	"strSendSuccess":"命令执行成功√",
-	"strDisabledErr": "命令无法执行:机器人已在此群中被关闭!",
-	"strActionEmpty":"动作不能为空×",
-	"strMEDisabledErr": "管理员已在此群中禁用.me命令!",
-	"strDisabledMeGlobal": "恕不提供.me服务×",
-	"strDisabledJrrpGlobal": "恕不提供.jrrp服务×",
-	"strDisabledDeckGlobal": "恕不提供.deck服务×",
-	"strDisabledDrawGlobal": "恕不提供.draw服务×",
-	"strDisabledSendGlobal": "恕不提供.send服务×",
-	"strHELPDisabledErr": "管理员已在此群中禁用.help命令!",
-	"strNameDelEmpty": "{nick}没有设置名称,无法删除!",
-	"strValueErr": "掷骰表达式输入错误!",
-	"strInputErr": "命令或掷骰表达式输入错误!",
-	"strUnknownErr": "发生了未知错误!",
-	"strUnableToGetErrorMsg": "无法获取错误信息!",
-	"strDiceTooBigErr": "{self}被你扔出的骰子淹没了×",
-	"strRequestRetCodeErr": "访问服务器时出现错误! HTTP状态码: {error}",
-	"strRequestNoResponse": "服务器未返回任何信息×",
-	"strTypeTooBigErr": "哇!让我数数骰子有多少面先~1...2...",
-	"strZeroTypeErr": "这是...!!时空裂({self}被骰子产生的时空裂缝卷走了)",
-	"strAddDiceValErr": "你这样要让{self}扔骰子扔到什么时候嘛~(请输入正确的加骰参数:5-10之内的整数)",
-	"strZeroDiceErr": "咦?我的骰子呢?",
-	"strRollTimeExceeded": "掷骰轮数超过了最大轮数限制!",
-	"strRollTimeErr": "异常的掷骰轮数",
-	"strObPrivate": "你想看什么呀？",
-	"strDismissPrivate": "滚！",
-	"strWelcomePrivate": "你在这欢迎谁呢？",
-	"strWelcomeMsgClearNotice": "已清除本群的入群欢迎词√",
-	"strWelcomeMsgClearErr": "没有设置入群欢迎词，清除失败×",
-	"strWelcomeMsgUpdateNotice": "{self}已更新本群的入群欢迎词√",
-	"strPermissionDeniedErr": "请让群内管理对{self}发送该指令×",
-	"strSelfPermissionErr":"{self}权限不够无能为力呢×",
-	"strNameTooLongErr": "名称过长×(最多为50英文字符)",
-	"strNameClr":"已将{nick}的名称删除√",
-	"strNameSet":"已将{nick}的名称更改为{new_nick}√",
-	"strUnknownPropErr": "未设定{attr}成功率，请先.st {attr} 技能值 或查看.help rc×",
-	"strEmptyWWDiceErr": "格式错误:正确格式为.w(w)XaY!其中X≥1, 5≤Y≤10",
-	"strPropErr": "请认真的输入你的属性哦~",
-	"strSetPropSuccess": "属性设置成功√",
-	"strPropCleared": "已清空{char}的所有属性√",
-	"strRuleReset":"已重置默认规则√",
-	"strRuleSet":"已设置默认规则√",
-	"strRuleErr": "规则数据获取失败,具体信息:\n",
-	"strRulesFailedErr": "请求失败,{self}无法连接数据库×",
-	"strPropDeleted": "已删除{pc}的{attr}√",
-	"strPropNotFound": "属性{attr}不存在×",
-	"strRuleNotFound": "{self}未找到对应的规则信息×",
-	"strProp": "{pc}的{attr}为{val}",
-	"strPropList": "{nick}的{char}属性列表为：{show}", 
-	"strStErr": "格式错误:请参考.help st获取.st命令的使用方法",
-	"strRulesFormatErr": "格式错误:正确格式为.rules[规则名称:]规则条目 如.rules COC7:力量",
-	"strLeaveDiscuss": "{self}现不支持讨论组服务，即将退出",
-	"strLeaveNoPower": "{self}未获得群管理，即将退群",
-	"strLeaveUnused":"{self}已经在这里被放置{day}天啦，马上就会离开这里了",
-	"strGlobalOff":"{self}休假中，暂停服务×",
-	"strPreserve": "{self}私有私用，勿扰勿怪\n如需申请许可请发送!authorize +[群号] [申请理由]",
-	"strJrrp": "{nick}今天的人品值是: {res}",
-	"strJrrpErr": "JRRP获取失败! 错误信息: \n{res}",
-	"strAddFriendWhiteQQ":"{strAddFriend}",				//白名单用户添加好友时回复此句
-	"strAddFriend", "欢迎使用{strSelfName}！\n.help协议 确认服务协议\n.help指令 查看指令列表\n.help设定 确认骰娘设定\n.help链接 查看源码文档\n使用服务默认已经同意服务协",					//同意添加好友时额外发送的语句
-	"strAddGroup", "欢迎使用{strSelfName}！\n请使用.dismiss QQ号（或后四位） 使{self}退群退讨论组\n.bot on/off QQ号（或后四位） //开启或关闭指令\n.group +/-禁用回复 //禁用或启用回复\n.help协议 确认服务协议\n.help指令 查看指令列表\n.help设定 确认骰娘设定\n.help链接 查看源码文档\n邀请入群默认视为同意服务协议，知晓禁言或移出的后果",
-	"strSelfName": "",
-	"strSelfCall": "&strSelfName",
-	"self": "&strSelfCall",
-	"strBotMsg": "\n使用.help更新 查看{self}更新内容",
-	"strHlpMsg" , "请使用.dismiss QQ号（或后四位） 使{self}退群退讨论组\n.bot on/off QQ号（或后四位） //开启或关闭指令\n.help协议 确认服务协议\n.help指令 查看指令列表\n.help群管 查看群管指令\n.help设定 确认骰娘设定\n.help链接 查看源码文档\n开发交流群：1029435374\n私骰分流群：863062599"
+	{"strParaEmpty","参数不能为空×"},			//偷懒用万能回复
+	{"strParaIllegal","参数非法×"},			//偷懒用万能回复
+	{"stranger","用户"},			//{nick}无法获取非空昵称时的称呼
+	{"strAdminOptionEmpty","找{self}有什么事么？{nick}"},			//
+	{"strLogNew","{self}开始新日志记录√\n请适时用.log off暂停或.log end完成记录"},
+	{"strLogOn","{self}开始日志记录√\n可使用.log off暂停记录"},
+	{"strLogOnAlready","{self}正在记录中！"},
+	{"strLogOff","{self}已暂停日志记录√\n可使用.log on恢复记录"},
+	{"strLogOffAlready","{self}已经暂停记录！"},
+	{"strLogEnd","{self}已完成日志记录√\n正在上传日志文件{log_file}"},
+	{"strLogEndEmpty","{self}已结束记录√\n本次无日志产生"},
+	{"strLogNullErr","{self}无日志记录或已结束！"},
+	{"strLogUpSuccess","{self}已完成日志上传√\n请访问 https://logpainter.kokona.tech/?s3={log_file} 以查看记录"},
+	{"strLogUpFailure","{self}上传日志文件失败，正在第{retry}次重试…{ret}"},
+	{"strLogUpFailureEnd","很遗憾，{self}无法成功上传日志文件×\n{ret}\n如需获取可联系Master:{master_QQ}\n文件名:{log_file}"},
+	{"strGMTableShow","{self}记录的{table_name}列表："},
+	{"strGMTableNotExist","{self}没有保存的{table_name}记录"},
+	{"strUserTrustShow","{user}在{self}处的信任级别为{trust}"},
+	{"strUserTrusted","已将{self}对{user}的信任级别调整为{trust}"},
+	{"strUserTrustDenied","{nick}在{self}处无权访问对方的权限×"},
+	{"strUserTrustIllegal","将目标权限修改为{trust}是非法的×"},
+	{"strUserNotFound","{self}无{user}的用户记录"},
+	{"strGroupAuthorized","A roll to the table turns to a dice fumble!\nDice Roller {strSelfName}√\n本群已授权许可，请尽情使用本骰娘√\n请遵守协议使用，服务结束后使用.dismiss送出!" },
+	{"strGroupLicenseDeny","本群未获{self}许可使用，自动在群内静默。\n请先.help协议 阅读并同意协议后向运营方申请许可使用，\n否则请管理员使用!dismiss送出{self}\n可按以下格式填写并发送申请:\n!authorize 申请用途:[ **请写入理由** ] 我已了解Dice!基本用法，仔细阅读并保证遵守{strSelfName}的用户协议，如需停用指令使用[ **请写入指令** ]，用后使用[ **请写入指令** ]送出群" },
+	{"strGroupLicenseApply","此群未通过自助授权×\n许可申请已发送√" },
+	{"strGroupSetOn","现已开启{self}在此群的“{option}”选项√"},			//群内开关和遥控开关通用此文本
+	{"strGroupSetOnAlready","{self}已在此群设置了{option}！"},			
+	{"strGroupSetOff","现已关闭{self}在此群的“{option}”选项√"},			
+	{"strGroupSetOffAlready","{self}未在此群设置{option}！"},
+	{"strGroupSetAll","{self}已修改记录中{cnt}个群的“{option}”选项√"},
+	{"strGroupDenied","{nick}在{self}处无权访问此群的设置×"},
+	{"strGroupSetDenied","{nick}在{self}处设置{option}的权限不足×"},
+	{"strGroupSetNotExist","{self}无{option}此选项×"},
+	{"strGroupWholeUnban","{self}已关闭全局禁言√"},
+	{"strGroupWholeBan","{self}已开启全局禁言√"},
+	{"strGroupWholeBanErr","{self}开启全局禁言失败×"},
+	{"strGroupUnban","{self}裁定:{member}解除禁言√"},
+	{"strGroupBan","{self}裁定:{member}禁言{res}分钟√"},
+	{"strGroupBanErr","{self}禁言{member}失败×"},
+	{"strGroupNotFound","{self}无该群记录×"},
+	{"strGroupNotIn","{self}当前不在该群或对象不是群！"},
+	{"strGroupExit","{self}已退出该群√"},
+	{"strGroupCardSet","{self}已将{target}的群名片修改为{card}√"},
+	{"strGroupCardSetErr","{self}设置{target}的群名片失败×"},
+	{"strGroupTitleSet","{self}已将{target}的头衔修改为{title}√"},
+	{"strGroupTitleSetErr","{self}设置{target}的头衔失败×"},
+	{"strPcNewEmptyCard","已为{nick}新建{type}空白卡{char}√"},
+	{"strPcNewCardShow","已为{nick}新建{type}卡{char}：{show}"},//由于预生成选项而存在属性
+	{"strPcCardSet","已将{nick}当前角色卡绑定为{char}√"},//{nick}-用户昵称 {pc}-原角色卡名 {char}-新角色卡名
+	{"strPcCardReset","已解绑{nick}当前的默认卡√"},//{nick}-用户昵称 {pc}-原角色卡名
+	{"strPcCardRename","已将{old_name}重命名为{new_name}√"},
+	{"strPcCardDel","已将角色卡{char}删除√"},
+	{"strPcCardCpy","已将{char2}的属性复制到{char1}√"},
+	{"strPcClr","已清空{nick}的角色卡记录√"},
+	{"strPcCardList","{nick}的角色列表：{show}"},
+	{"strPcCardBuild","{nick}的{char}生成：{show}"},
+	{"strPcCardShow","{nick}的<{type}>{char}：{show}"},	//{nick}-用户昵称 {type}-角色卡类型 {char}-角色卡名
+	{"strPcCardRedo","{nick}的{char}重新生成：{show}"},
+	{"strPcGroupList","{nick}的各群角色列表：{show}"},
+	{"strPcNotExistErr","{self}无{nick}的角色卡记录，无法删除×"},
+	{"strPcCardFull","{nick}在{self}处的角色卡已达上限，请先清理多余角色卡×"},
+	{"strPcTempInvalid","{self}无法识别的角色卡模板×"},
+	{"strPcNameEmpty","名称不能为空×"},
+	{"strPcNameExist","{nick}已存在同名卡×"},
+	{"strPcNameNotExist","{nick}无该名称角色卡×"},
+	{"strPcNameInvalid","非法的角色卡名（存在冒号）×"},
+	{"strPcInitDelErr","{nick}的初始卡不可删除×"},
+	{"strPcNoteTooLong","备注长度不能超过255×"},
+	{"strPcTextTooLong","文本长度不能超过48×"},
+	{"strCensorCaution","提醒：{nick}的指令包含敏感词，{self}已上报"},
+	{"strCensorWarning","警告：{nick}的指令包含敏感词，{self}已记录并上报！"},
+	{"strCensorDanger","警告：{nick}的指令包含敏感词，{self}拒绝指令并已上报！"},
+	//{"strCensorCritical","警告：{nick}的指令包含敏感词，{self}已记录并上报！"},
+	{"strSpamFirstWarning","你短时间内对{self}指令次数过多！请善用多轮掷骰和复数生成指令（刷屏初次警告）"},
+	{"strSpamFinalWarning","请暂停你的一切指令，避免因高频指令被{self}拉黑！（刷屏最终警告）"},
+	{"strReplySet","{self}对关键词{key}的回复已设置√"},
+	{"strReplyDel","{self}对关键词{key}的回复已清除√"},
+	{"strStModify","{self}对已记录{pc}的属性变化:"},		//存在技能值变化情况时，优先使用此文本
+	{"strStDetail","{self}对已设置{pc}的属性："},		//存在掷骰时，使用此文本(暂时无用)
+	{"strStValEmpty","{self}未记录{attr}原值×"},		
+	{"strBlackQQAddNotice","{user_nick}，你已被{self}加入黑名单，详情请联系Master:{master_QQ}"},				
+	{"strBlackQQAddNoticeReason","{user_nick}，由于{reason}，你已被{self}加入黑名单，申诉解封请联系管理员。Master:{master_QQ}"},
+	{"strBlackQQDelNotice","{user_nick}，你已被{self}移出黑名单，现在可以继续使用了"},
+	{"strWhiteQQAddNotice","{user_nick}，您已获得{self}的信任，请尽情使用{self}√"},
+	{"strWhiteQQDenied","你不是{self}信任的用户×"},
+	{"strWhiteGroupDenied","本群聊不在白名单中×"},
+	{"strDeckProNew","已新建自定义牌堆√"},
+	{"strDeckProSet","已将{deck_name}设置为默认牌堆√"},
+	{"strDeckProClr","已删除默认牌堆√"},
+	{"strDeckProNull","默认牌堆不存在!"},
+	{"strDeckTmpReset","已重置卡牌√"},
+	{"strDeckTmpShow","当前剩余卡牌:"},
+	{"strDeckTmpEmpty","已无剩余卡牌！"},		//剩余卡牌数为0
+	{"strDeckTmpNotFound","不存在剩余卡牌×"},	//没有生成过牌堆
+	{"strDeckNameEmpty","未指定牌堆名×"},
+	{"strRollDice","{pc}掷骰: {res}"},
+	{"strRollDiceReason","{pc}掷骰 {reason}: {res}"},
+	{"strRollHidden","{pc}进行了一次暗骰"},
+	{"strRollTurn","{pc}的掷骰轮数: {turn}轮"},
+	{"strRollMultiDice","{pc}掷骰{turn}次: {dice_exp}={res}"},
+	{"strRollMultiDiceReason","{pc}掷骰{turn}次{reason}: {dice_exp}={res}"},
+	{"strRollSkill","{pc}进行{attr}检定："},
+	{"strRollSkillReason","由于{reason} {pc}进行{attr}检定："},
+	{"strEnRoll","{pc}的{attr}增强或成长检定：\n{res}"},//{attr}在用户省略技能名后替换为{strEnDefaultName}
+	{"strEnRollNotChange","{strEnRoll}\n{pc}的{attr}值没有变化"},
+	{"strEnRollFailure","{strEnRoll}\n{pc}的{attr}变化{change}点，当前为{final}点"},
+	{"strEnRollSuccess","{strEnRoll}\n{pc}的{attr}增加{change}点，当前为{final}点"},
+	{"strEnDefaultName","属性或技能"},//默认文本
+	{"strEnValEmpty", "未对{self}设定待成长属性值，请先.st {attr} 属性值 或查看.help en×"},
+	{"strEnValInvalid", "{attr}值输入不正确,请输入1-99范围内的整数!"},
+	{"strSendMsg","{self}已将消息送出√"},//Master定向发送的回执
+	{"strSendMasterMsg","消息{self}已发送给Master√"},//向Master发送的回执
+	{"strSendMsgEmpty","发送消息内容为空×"},
+	{"strSendMsgInvalid","{self}没有可以发送的对象×"},//没有Master
+	{"strDefaultCOCClr","默认检定房规已清除√"},
+	{"strDefaultCOCNotFound","默认检定房规不存在×"},
+	{"strDefaultCOCSet","默认检定房规已设置:"},
+	{"strLinked","{self}已为对象建立链接√"},
+	{"strLinkClose","{self}已断开与对象的链接√" },
+	{"strLinkBusy","{nick}的目标已经有对象啦×\n{self}不支持多边关系" },
+	{"strLinkedAlready","{self}正在被其他对象链接×\n请{nick}先断绝当前关系" },
+	{"strLinkingAlready","{self}已经开启链接啦!" },
+	{"strLinkCloseAlready","{self}断开链接失败：{nick}当前本就没有对象！" },
+	{"strLinkNotFound","{self}找不到{nick}的对象×"},
+	{"strNotMaster","你不是{self}的master！你想做什么？"},
+	{"strNotAdmin","你不是{self}的管理员×"},
+	{"strAdminDismiss","{strDismiss}"},					//管理员指令退群的回执
+	{"strDismiss",""},						//.dismiss退群前的回执
+	{"strHlpSet","已为{key}设置词条√"},
+	{"strHlpReset","已清除{key}的词条√"},
+	{"strHlpNameEmpty","Master想要自定义什么词条呀？"},
+	{"strHelpNotFound","{self}未找到【{help_word}】相关的词条×"},
+	{"strHelpSuggestion","{self}猜{nick}想要查找的是:{res}"},
+	{"strClockToWork","{self}已按时启用√"},
+	{"strClockOffWork","{self}已按时关闭√"},
+	{"strNameGenerator","{pc}的随机名称：{res}"},
+	{"strDrawCard", "来看看{pc}抽到了什么：{res}"},
+	{"strMeOn", "成功在这里启用{self}的.me命令√"},
+	{"strMeOff", "成功在这里禁用{self}的.me命令√"},
+	{"strMeOnAlready", "在这里{self}的.me命令没有被禁用!"},
+	{"strMeOffAlready", "在这里{self}的.me命令已经被禁用!"},
+	{"strObOn", "成功在这里启用{self}的旁观模式√"},
+	{"strObOff", "成功在这里禁用{self}的旁观模式√"},
+	{"strObOnAlready", "在这里{self}的旁观模式没有被禁用!"},
+	{"strObOffAlready", "在这里{self}的旁观模式已经被禁用!"},
+	{"strObList", "当前{self}的旁观者有:"},
+	{"strObListEmpty", "当前{self}暂无旁观者"},
+	{"strObListClr", "{self}成功删除所有旁观者√"},
+	{"strObEnter", "{nick}成功加入{self}的旁观√"},
+	{"strObExit", "{nick}成功退出{self}的旁观√"},
+	{"strObEnterAlready", "{nick}已经处于{self}的旁观模式!"},
+	{"strObExitAlready", "{nick}没有加入{self}的旁观模式!"},
+	{"strQQIDEmpty", "QQ号不能为空×"},
+	{"strGroupIDEmpty", "群号不能为空×"},
+	{"strBlackGroup", "该群在黑名单中，如有疑问请联系master"},
+	{"strBotOn", "成功开启{self}√"},
+	{"strBotOff", "成功关闭{self}√"},
+	{"strBotOnAlready", "{self}已经处于开启状态!"},
+	{"strBotOffAlready", "{self}已经处于关闭状态!"},
+	{"strRollCriticalSuccess", "大成功！"}, //一般检定用
+	{"strRollExtremeSuccess", "极难成功"},
+	{"strRollHardSuccess", "困难成功"},
+	{"strRollRegularSuccess", "成功"},
+	{"strRollFailure", "失败"},
+	{"strRollFumble", "大失败！"},
+	{"strFumble", "大失败!"}, //多轮检定用，请控制长度
+	{"strFailure", "失败"},
+	{"strSuccess", "成功"},
+	{"strHardSuccess", "困难成功"},
+	{"strExtremeSuccess", "极难成功"},
+	{"strCriticalSuccess", "大成功!"},
+	{"strNumCannotBeZero", "无意义的数目！莫要消遣于我!"},
+	{"strDeckNotFound", "是说{deck_name}？{self}没听说过的牌堆名呢……"},
+	{"strDeckEmpty", "{self}已经一张也不剩了！"},
+	{"strNameNumTooBig", "生成数量过多!请输入1-10之间的数字!"},
+	{"strNameNumCannotBeZero", "生成数量不能为零!请输入1-10之间的数字!"},
+	{"strSetInvalid", "无效的默认骰!请输入1-9999之间的数字!"},
+	{"strSetTooBig", "这面数……让我丢个球啊!请输入1-9999之间的数字!"},
+	{"strSetCannotBeZero", "默认骰不能为零!请输入1-9999之间的数字!"},
+	{"strCharacterCannotBeZero", "人物作成次数不能为零!请输入1-10之间的数字!"},
+	{"strCharacterTooBig", "人物作成次数过多!请输入1-10之间的数字!"},
+	{"strCharacterInvalid", "人物作成次数无效!请输入1-10之间的数字!"},
+	{"strSanRoll", "{pc}的San Check：\n{res}"},
+	{"strSanRollRes", "{strSanRoll}\n{pc}的San值减少{change}点,当前剩余{final}点"},
+	{"strSanCostInvalid", "SC表达式输入不正确,格式为成功扣San/失败扣San,如1/1d6!"},
+	{"strSanInvalid", "San值输入不正确,请输入1-99范围内的整数!"},
+	{"strSanEmpty", "未设定San值，请先.st san 或查看.help sc×"},
+	{"strSuccessRateErr", "这成功率还需要检定吗？"},
+	{"strGroupIDInvalid", "无效的群号!"},
+	{"strSendErr", "消息发送失败!"},
+	{"strSendSuccess", "命令执行成功√"},
+	{"strDisabledErr", "命令无法执行:机器人已在此群中被关闭!"},
+	{"strActionEmpty", "动作不能为空×"},
+	{"strMEDisabledErr", "管理员已在此群中禁用.me命令!"},
+	{"strDisabledMeGlobal", "恕不提供.me服务×"},
+	{"strDisabledJrrpGlobal", "恕不提供.jrrp服务×"},
+	{"strDisabledDeckGlobal", "恕不提供.deck服务×"},
+	{"strDisabledDrawGlobal", "恕不提供.draw服务×"},
+	{"strDisabledSendGlobal", "恕不提供.send服务×"},
+	{"strHELPDisabledErr", "管理员已在此群中禁用.help命令!"},
+	{"strNameDelEmpty", "{nick}没有设置名称,无法删除!"},
+	{"strValueErr", "掷骰表达式输入错误!"},
+	{"strInputErr", "命令或掷骰表达式输入错误!"},
+	{"strUnknownErr", "发生了未知错误!"},
+	{"strUnableToGetErrorMsg", "无法获取错误信息!"},
+	{"strDiceTooBigErr", "{self}被你扔出的骰子淹没了×"},
+	{"strRequestRetCodeErr", "访问服务器时出现错误! HTTP状态码: {error}"},
+	{"strRequestNoResponse", "服务器未返回任何信息×"},
+	{"strTypeTooBigErr", "哇!让我数数骰子有多少面先~1...2..."},
+	{"strZeroTypeErr", "这是...!!时空裂({self}被骰子产生的时空裂缝卷走了)"},
+	{"strAddDiceValErr", "你这样要让{self}扔骰子扔到什么时候嘛~(请输入正确的加骰参数:5-10之内的整数)"},
+	{"strZeroDiceErr", "咦?我的骰子呢?"},
+	{"strRollTimeExceeded", "掷骰轮数超过了最大轮数限制!"},
+	{"strRollTimeErr", "异常的掷骰轮数"},
+	{"strDismissPrivate", "滚！"},
+	{"strWelcomePrivate", "你在这欢迎谁呢？"},
+	{"strWelcomeMsgClearNotice", "已清除本群的入群欢迎词√"},
+	{"strWelcomeMsgClearErr", "没有设置入群欢迎词，清除失败×"},
+	{"strWelcomeMsgUpdateNotice", "{self}已更新本群的入群欢迎词√"},
+	{"strPermissionDeniedErr", "请让群内管理对{self}发送该指令×"},
+	{"strSelfPermissionErr", "{self}权限不够无能为力呢×"},
+	{"strNameTooLongErr", "名称过长×(最多为50英文字符)"},
+	{"strNameClr", "已将{nick}的名称删除√"},
+	{"strNameSet", "已将{nick}的名称更改为{new_nick}√"},
+	{"strUnknownPropErr", "未设定{attr}成功率，请先.st {attr} 技能值 或查看.help rc×"},
+	{"strEmptyWWDiceErr", "格式错误:正确格式为.w(w)XaY!其中X≥1, 5≤Y≤10"},
+	{"strPropErr", "请认真的输入你的属性哦~"},
+	{"strSetPropSuccess", "属性设置成功√"},
+	{"strPropCleared", "已清空{char}的所有属性√"},
+	{"strRuleReset", "已重置默认规则√"},
+	{"strRuleSet", "已设置默认规则√"},
+	{"strRuleErr", "规则数据获取失败,具体信息:\n"},
+	{"strRulesFailedErr", "请求失败,{self}无法连接数据库×"},
+	{"strPropDeleted", "已删除{pc}的{attr}√"},
+	{"strPropNotFound", "属性{attr}不存在×"},
+	{"strRuleNotFound", "{self}未找到对应的规则信息×"},
+	{"strProp", "{pc}的{attr}为{val}"},
+	{"strPropList", "{nick}的{char}属性列表为：{show}"},
+	{"strStErr", "格式错误:请参考.help st获取.st命令的使用方法"},
+	{"strRulesFormatErr", "格式错误:正确格式为.rules[规则名称:]规则条目 如.rules COC7:力量"},
+	{"strLeaveDiscuss", "{self}现不支持讨论组服务，即将退出"},
+	{"strLeaveNoPower", "{self}未获得群管理，即将退群"},
+	{"strLeaveUnused", "{self}已经在这里被放置{day}天啦，马上就会离开这里了"},
+	{"strGlobalOff", "{self}休假中，暂停服务×"},
+	{"strPreserve", "{self}私有私用，勿扰勿怪\n如需申请许可请发送!authorize +[群号] 申请用途:[ **请写入理由** ] 我已了解Dice!基本用法，仔细阅读并保证遵守{strSelfName}的用户协议，如需停用指令使用[ **请写入指令** ]，用后使用[ **请写入指令** ]送出群"},
+	{"strJrrp", "{nick}今天的人品值是: {res}"},
+	{"strJrrpErr", "JRRP获取失败! 错误信息: \n{res}"},
+	{ "strFriendDenyNotUser", "很遗憾，你没有使用{self}的记录" },
+	{ "strFriendDenyNoTrust", "很遗憾，你不是{self}信任的用户" },
+	{"strAddFriendWhiteQQ", "{strAddFriend}"}, //白名单用户添加好友时回复此句
+	{
+		"strAddFriend",
+		R"(欢迎选择{strSelfName}的免费掷骰服务！
+.help协议 确认服务协议
+.help指令 查看指令列表
+.help设定 确认骰娘设定
+.help链接 查看源码文档
+使用服务默认已经同意服务协议)"
+	}, //同意添加好友时额外发送的语句
+	{
+		"strAddGroup",
+		R"(欢迎选择{strSelfName}的免费掷骰服务！
+请使用.dismiss QQ号（或后四位） 使{self}退群退讨论组
+.bot on/off QQ号（或后四位） //开启或关闭指令
+.group +/-禁用回复 //禁用或启用回复
+.help协议 确认服务协议
+.help指令 查看指令列表
+.help设定 确认骰娘设定
+.help链接 查看源码文档
+邀请入群默认视为同意服务协议，知晓禁言或移出的后果)"
+	},
+	{"strSelfName", ""},
+	{"strSelfCall", "&strSelfName"},
+	{"self", "&strSelfCall"},
+	{"strBotMsg", "\n使用.help更新 查看{self}更新内容"},
+	{
+		"strHlpMsg",
+		R"(请使用.dismiss QQ号（或后四位） 使{self}退群退讨论组
+.bot on/off QQ号（或后四位） //开启或关闭指令
+.help协议 确认服务协议
+.help指令 查看指令列表
+.help群管 查看群管指令
+.help设定 确认骰娘设定
+.help链接 查看源码文档
+官方论坛: https://forum.kokona.tech/
+论坛导航贴: https://kokona.tech)"
+	}
 }
 ```
 
@@ -549,6 +845,8 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 +---------------------+----------+------------------------------------------------------+
 | Private             | 0        | 私用模式开启（私骰作成=1）                           |
 +---------------------+----------+------------------------------------------------------+
+| CheckGroupLicense   | 0        | 审核模式，入群后检查许可使用                         |
++---------------------+----------+------------------------------------------------------+
 | LeaveDiscuss        | 0        | 检测到讨论组发言时自动退出                           |
 +---------------------+----------+------------------------------------------------------+
 | ListenGroupRequest  | 1        | 响应群添加请求                                       |
@@ -559,7 +857,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 +---------------------+----------+------------------------------------------------------+
 | ListenFriendAdd     | 1        | 响应好友添加反馈（由插件通过则不重复）               |
 +---------------------+----------+------------------------------------------------------+
-| AllowStranger       | 0        | 私用模式下允许非白名单好友申请（公骰作成=1）         |
+| AllowStranger       | 1        | 0=仅允许白名单;0=允许有记录用户;2-允许非黑名单申请   |
 +---------------------+----------+------------------------------------------------------+
 | ListenGroupKick     | 1        | 响应群移出事件                                       |
 +---------------------+----------+------------------------------------------------------+
@@ -575,6 +873,10 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 +---------------------+----------+------------------------------------------------------+
 | KickedBanInviter    | 0        | 被踢后拉黑邀请者（公骰作成=1）                       |
 +---------------------+----------+------------------------------------------------------+
+| GroupInvalidSize    | 500      | 默认协议无效群规模                                   |
++---------------------+----------+------------------------------------------------------+
+| GroupClearLimit     | 20       | 单次清群上限                                         |
++---------------------+----------+------------------------------------------------------+
 | BelieveDiceList     | 0        | 信任来自骰娘列表成员的warning（公骰作成=1）          |
 +---------------------+----------+------------------------------------------------------+
 | CloudVisible        | 1        | 允许通过骰娘网络公开骰娘的QQ和其他信息               |
@@ -589,10 +891,18 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 +---------------------+----------+------------------------------------------------------+
 | SendIntervalBusy    | 100      | 忙时消息队列处理一条消息发送的间隔(ms)               |
 +---------------------+----------+------------------------------------------------------+
+| AutoSaveInterval    | 5        | 自动保存事件间隔(min)                                |
++---------------------+----------+------------------------------------------------------+
+| AutoFrameRemake     | 0        | 自动重启框架间隔(h)                                  |
++---------------------+----------+------------------------------------------------------+
+| ListenGroupEcho     | 0        | 开启群内消息自我接收                                 |
++---------------------+----------+------------------------------------------------------+
+| ListenSelfEcho      | 0        | 开启私聊消息自我接收                                 |
++---------------------+----------+------------------------------------------------------+
 ```
 
-**指令禁用对信任4以上用户无效**  
-*如果使用了容易刷屏又没有独立开关的回复插件，建议开启DisabledBlock并令Dice拥有更高优先级*  
+**指令禁用对信任4以上用户无效**
+*如果使用了容易刷屏又没有独立开关的回复插件，建议开启DisabledBlock并令Dice拥有更高优先级*
 *对.me特别处理的理由是其在跑团中几乎零作用，却可以制造骰娘自己说话的假象，引发风险。*
 
 #### 通知类型表
@@ -687,6 +997,8 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 +----------------------------------+------------------------------+--------------------+
 | DiceData/mod/                    | 模块文件（目前限定帮助文档） | load时读取，不写入 |
 +----------------------------------+------------------------------+--------------------+
+| DiceData/plugin/                 | 脚本文件                     | load及调用时读取   |
++----------------------------------+------------------------------+--------------------+
 | DiceData/PublicDeck/             | 外置牌堆                     | load时读取，不写入 |
 +----------------------------------+------------------------------+--------------------+
 | DiceData/CardTemp/               | 角色卡模板                   | load时读取，不写入 |
@@ -699,8 +1011,9 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 {
     "mod":"塔罗",
     "author":"Shiki",
-    "brief":"外置模块样例文档",
-    "comment":"模块信息当前版本在插件内没有实际作用",
+    "dice_build":564,
+    "brief":"外置模块样例文档。未来版本指令时可见",
+    "comment":"模块信息,该内容只在源文件可见。未来版本dice_build会作为当前版本是否可用的参照",
     "helpdoc":{
 		"塔罗":"塔罗牌，由“TAROT”一词音译而来，被称为“大自然的奥秘库”。它是西方古老的占卜工具，中世纪起流行于欧洲，地位相当于中国的《周易》",
         "愚者正位":"憧憬自然的地方、毫无目的地前行、喜欢尝试挑战新鲜事物、四处流浪。美好的梦想。",
@@ -750,3 +1063,105 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
     }
 }
 ```
+
+
+
+## 更新历史
+
+### 更新说明(2.4.1)
+
+- 更新适配先驱框架的更新和重载功能，及其他接口适配
+- 新增.log日志记录功能
+- 新增.help模糊查询建议
+- 新增敏感词检测机制
+- 新增.groups查群功能
+- 优化.link功能
+- 视入群邀请者拥有群权限
+
+### 更新说明(2.4.0)
+
+- 新增GUI，入口为酷Q【菜单】->【应用】->【Dice!】->【综合管理】
+
+- Dice!对Mirai适配
+
+- 新增统计信息
+
+  系统新增硬盘占用检测。入群新增用户比例检测。新增每日用户、指令量统计。
+
+- 新增定时任务
+
+  取消默认的每日保存，默认每十分钟保存一次。允许定时清理image/，默认关闭。
+
+- 优化空参数指令的响应
+
+  当新人只知道指令不知道参数，在裸发".pc"时将难以得到有效反馈。为了提高交互效率，对于空参数无意义的指令，回执将重定向为对应的help文档。现在发送".pc"将收到与".help pc"相同的应答。与此同时一些原本用于空参数的回执条目被弃用，如：strStErr。
+
+- 新增牌堆格式
+
+  在牌堆内可使用"::牌数::内容"的格式替换重复的项目。
+
+- 优化不良记录同步系统
+
+  通过将其他来源的不良记录BlackList.json重命名为BlackListEx.json，放置于[DiceData]/conf目录下。Dice!加载时会自动读取并更新记录，之后该文件会被销毁。
+
+  通过指令.cloud black可以读取云端经二次确认的记录
+
+  新增.user diss 私黑指令
+
+- 新增group 协议无效词条
+
+  类似于忽略，但允许!authorize和!warning以及来自admin的!dismiss。进入500人以上群时自动添加该词条，该规模的群聊不该认为自动建立用户协议。
+
+- 新增分页发送机制
+
+  识别待发送消息中的'\f'后会将消息分段发送。
+
+### 更新说明(2.3.8exp)
+*2.3.8Exp10：增设用户和群记录，将白名单转换为用户信任/群选项，自定义优化*。*如有自定义strNameGenerator请参照格式及时重定义，以免无法显示*
+*2.3.8Exp9：拦截消息设置。多轮检定将调用一组额外的strSuccess文本以避免糟糕的排版，如有需要请额外设置*
+*2.3.8Exp8：新增warning，完善黑名单，开放设置功能*
+*2.3.8Exp7：新增Admin、monitor，所有admin指令对master而言都可以用.master代替。为.en/.sc未输入属性值时分别设定了独立回执*
+*2.3.8.6i：拆分.send两个发送方向的回执，自定义化掷骰检定的回执*
+*2.3.8.5i：增加.send功能*
+*2.3.8.2i：允许定时开关，设定了非master使用专属指令时的回复文本，设置strDismiss后将会在被.dismiss时回复*
+*2.3.8.1i：设定了默认入群介绍*
+
+## 后记
+
+### 更新手记(2021.2.20)
+
+溯洄又跑路了，结果2.5.0还没发布就又回来了。原本这一次跑路的影响比以往任何一次都要大，因为溯洄为先驱写了CQXQ，为MiraiNative更新了1.8.6，为手机模拟器更新了ExaGear，而以上项目，我 全 不 会。所以感谢风荷帮我搞定了Dice驱动器先驱插件的部分。我和溯洄都是主见极强的人，但我想我们都还在成长。
+
+在酷Q时代，把一个插件拆成两个文件看起来很蠢，因为大大降低了安装和更新的便利性，提高了新人门槛。但现在无所谓了——无论CQXQ+Dice!还是MiraiNative+Dice!，转换插件已然不可避免。因此我有了DiceDriver+Dice!的想法，也顺便解决一个问题——心跳报告和不良记录上传的源码对所有人暴露导致的安全风险，现在这部分内容已经转移到DiceDriver中了。但是很可惜Mirai用户将不能不使用MiraiNative+DiceDriver+Dice!的配置，DiceDriver在这里只能充当酷Q插件转接Dice!。因为当我有这想法的时候，我甚至得从写mirai插件要用什么IDE开始问溯洄。
+
+Dice!的第四个框架，我最终还是倾向于小栗子——它有设置头衔的api（不是）。
+
+### 更新手记(2020.10.2)
+
+2.4.1的阶段并没有像之前一样想着憋大招，一边适配先驱插件，一边加了些小功能。顺便也是在给自己的瓶颈拖时间，但是并没有什么实质性进展。
+
+大概描述一下遇到的一些瓶颈：
+
+pc卡格式的优化，现在的卡和卡模板稍显繁琐，但还是不方便录入文本值。需要敲定不同类型属性的存储格式后，才能做与云端的上传下载。
+
+为更丰富的参数安排保留字符，如检定时临时调用指定pc的属性(.rc [pc1]/[skill1])，连接符号最好跨越中英文全半角，而塔骰使用的减号在Dice!中已经用作属性减值了。
+
+自定义函数的格式，预想是{?like?1605271653&10?}表示点赞10次QQ1605271653。但是还要设计字符转义来保证完备性就很烦。
+
+模块(mod)的安装卸载和优先级调整，以及把每个牌堆文件视为单独模块。当然这个不算瓶颈，只是一直没下手。
+
+### 更新手记(2020.7.29)
+
+这里是Shiki。我也没想到，exp11没了~~，饼不算数了~~。再回归成为Dice!主支的开发者，确实是我不曾想到的。当然这对用户而言没多大区别。作为一个整合过渡用的版本，这一说可以说没有什么明显的改动，尤其是在用户体验上。
+
+当然又有新坑埋下了，那就是新的定时任务系统。我对造轮子有种额外的热衷，相较而言，新功能更像是机制建立后的水到渠成。~~所以我的饼做的比画的慢太多。~~等定时系统完善后，大概就可以用来跑团杀鸽子了。
+
+### 更新手记(2020.5.14)
+
+这里是Shiki，在半年时间里，exp10经历了一个繁复拖沓的开发周期。虽然有部分现实因素，但更多受限于开发者的项目管理能力不足。为了一次性将所有存档文件从酷Q默认文件夹搬迁到[DiceData]/，开发者被迫将所有认为需要改进的涉及文件的机制更新了一遍。好在有众多用户的积极支持，Dice!exp终于迎来了新一版正式发布版。
+
+exp10的更新体现了两极分化的开发思路：对用户的极简化和对深度用户的高度定制化。对于开包即用的用户（超过Shiki全部万千骰娘的半数），初始设定将更贴合用户体验。对于没有认主导致的接收信息量不足问题，无主骰娘现在会在初始化后向自己发送通知，此后所有通知都会发送给自己。如此或有助于非官方渠道接触骰娘的用户更容易接触到骰娘的常规用法。
+
+可以看到，exp10对黑白名单的扩展大大增加了用户的学习成本。因此我全套向下兼容了旧有的黑白名单、管理、监视窗口指令，试图构建简洁功能-高级功能并存的模式。用户可以不理解信任等级，而像之前那样使用.admin whiteqq和.master admin，也可以不理解单群设置而简单实用.admin whitegroup。
+
+经历了exp9挖坑牌堆exp10完善后，我体验到了在大版本更新前挖好坑的模式，即提前做好扩展的空间等着大版本填坑。鉴于整个开发过于耗时，又希望生态圈内的创作者能尽早熟悉文件格式进行开发，exp10先用一天的开发时间支持了mod文件的基本格式，等待后续填充helpdoc以外的类型。session、mod在exp10都是看起来没那么重要的更新，但它们的作用都可以期待一下。那么，尽情催更exp11的开发吧，说不定到那时候，log、随机回复、敏感词检测、模糊匹配回复……都实现了呢。
