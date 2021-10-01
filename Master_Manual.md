@@ -1,6 +1,6 @@
 # Dice! Master手册
 
-*这是Dice!于2021.7.31更新先驱版2.5.2后对应的[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)*。用户指令请参考[用户手册](https://shiki.stringempty.xyz/Manual/Shiki_User_Manual.html)。更多内容可参看kokona论坛[https://forum.kokona.tech/](https://forum.kokona.tech/)。**本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
+*这是Dice!于2021.10.1更新2.6.0后对应的[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)*。用户指令请参考[用户手册](https://shiki.stringempty.xyz/Manual/Shiki_User_Manual.html)。更多内容可参看kokona论坛[https://forum.kokona.tech/](https://forum.kokona.tech/)。**本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
 
 ### 目录
 
@@ -27,7 +27,12 @@
 - [更新历史](#更新历史)
 - [后记](#后记)
 
-### 更新说明(2.5.2)
+### 更新说明(2.6.0)
+
+- 支持reply使用多种触发模式与回复模式
+- 可使用WebUI进行远程图形化配置
+
+#### 更新说明(2.5.2)
 
 - 支持[自定义文本](#自定义文本转义)使用sample转义多选一
 - [自动清理过期用户数据](#过期数据自动清理(.admin InactiveUserLine/InactiveGroupLine=360))（默认360天）
@@ -126,6 +131,44 @@
 1. 在流泪猫猫头中卸载Dice!
 2. 将Dice.Driver.CQ.dll和Dice.Driver.CQ.json放入\data\MiraiNative\plugins文件夹（加载后自动启用）
 3. (Mirai自旧版升级)将根目录下device.json复制到根目录下（让Mirai继续使用先前的登录信息）
+
+### WebUI面板
+
+WebUI是**全平台**可用的图形化配置页面，通过Dice!初始化时运行的监听端口访问。
+
+#### WebUI 基础使用
+
+在登录成功以后，Dice!会向Master(没有Master的情况下，自己) 发送WebUI运行的端口。如图中运行在8080端口。默认情况下，WebUI运行在一个随机的未使用的端口，但你可以通过WebUIPort属性更改。
+
+![img](https://dice-forum.s3.ap-northeast-1.amazonaws.com/2021-09-17/1631891867-619602-image.png)
+
+在本地(运行Dice的同一个设备)浏览器中输入`http://127.0.0.1:端口`进入WebUI 请一定要输入http://否则某些浏览器会卡死
+如果你在远程访问WebUI，请确定已配置好防火墙等，并使用对应的IP地址或域名访问（而不是127.0.0.1）
+![img](https://dice-forum.s3.ap-northeast-1.amazonaws.com/2021-09-17/1631892027-416085-image.png)
+
+提示登录时，默认用户名为admin，密码为password，进入WebUI后可在WebUI配置栏更改密码。WebUI默认只允许本地访问，所以如果设备只有你一个人能访问（不是共享的云服务器等）不更改密码也无所谓。
+![img](https://dice-forum.s3.ap-northeast-1.amazonaws.com/2021-09-17/1631892075-326091-image.png)
+
+可以在上面执行管理操作，应该都符合直觉。需要注意的是你可以直接点击表格修改其中内容，表格中的修改无需点击保存等，会在编辑完成后自动生效。
+
+#### WebUI 配置
+
+WebUI有三个配置项，更改配置后重启才会生效
+`EnableWebUI` - 启用WebUI, 0为禁用, 1为启用, 默认为1
+`WebUIPort` - WebUI端口, 0为随机, 其他为固定端口
+`WebUIAllowInternetAccess` - 允许从非本地地址访问WebUI, 0为不允许, 1为允许, 默认为0, 也就是WebUI默认只能从本地访问。如果你使用Docker网络等，你可能需要将此项设置为1才能在Docker宿主机上访问WebUI。
+
+#### WebUI 环境变量
+
+可以通过环境变量设置WebUI配置。环境变量具有较高优先级。
+`DICE_WEBUI_PORT` 设置端口，0为随机端口
+`DICE_WEBUI_PORT_USE_VARIABLE` 使用另一个环境变量的值作为端口，比DICE_WEBUI_PORT有更高优先级，可用于PaaS等平台
+`DICE_WEBUI_ALLOW_INTERNET_ACCESS` 0为不允许, 1为允许
+
+### 配置远程访问
+
+WebUI 使用 HTTP Digest验证，密码保存为Digest，理论上比较安全。然而，如果需要暴露到公网，我们仍然推荐使用nginx或apache等配置好TLS然后反向代理到Dice WebUI以确保安全。
+**当然，允许远程访问前请务必更改密码，不然再安全也没用。**
 
 ### 管理面板
 
@@ -430,7 +473,17 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 ### 其他机制
 
-#### 消息发送间隔(.admin SendIntervalIdle=500)
+#### 框架消息富文本转义（CQ码）
+
+DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等）转换为统一的CQ码
+
+`[CQ:image,file=xxx.abc]` 将本地`[框架根目录]/data/image/xxx.abc`位置的图片上传并在消息中发送
+
+`[CQ:image,id=xxx]`接收消息中的图片，id与服务器缓存图片对应，但区分群聊图片与私聊图片。群聊调用私聊消息的图片id将无法正常发送图片，反之同理。
+
+`[CQ:record,file=xxx.silk]`将本地`[框架根目录]/data/record/xxx.silk`位置的语音上传并覆盖整条消息内容发送
+
+#### 消息送间隔(.admin SendIntervalIdle=500)
 
 一般地，Dice!的待发送QQ消息不会立即发送，而是进入发送队列排队发送，并在每次发送后等待固定时间，即发送间隔(ms)。
 
@@ -484,11 +537,19 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 
 #### 自定义回复(.reply)
 
-当存在触发词与收到的消息完全一致时，将随机选择一项回复发送。当群内开启【禁用回复】时，不会响应回复。**触发回复也会算入刷屏计数！**
-`.reply [触发词] [回复文本1](|[回复文本2](...|[回复文本N]))` //收到触发词后，从N项回复中随机取一项，所有回复使用"|"分隔
-`.reply [触发词]` //清除触发词
+未视为指令而响应的消息，将按完全匹配->模糊匹配->正则匹配的顺序检测触发词。**触发回复也会算入刷屏计数！**
+`.reply set (Type=[回复性质](Reply/Order))
+[匹配模式](Match/Search/Regex)=[触发词]
+[回复模式](Deck/Text/Lua)=[回复词]`
 
-回复以"."开头时，还会受到群指令开关的调节。默认可使用`.help回复列表 查询载入的指令
+- 回复性质：决定该回复由`停用指令`(bot off)还是`禁用回复`(reply off)控制开关。该项可省略，默认由reply控制。
+- 匹配模式：Match-完全匹配；Search-模糊匹配；Regex-正则匹配。
+- 回复模式：Deck-牌堆（回复词以分隔符'|'切割为牌堆）Text-直接返回回复词；Lua-将回复词作为Lua语句执行，将返回值回复。
+
+`.reply show [触发词]` 查看指定回复
+`.reply del [触发词]` 清除触发词
+
+默认可使用`.help回复列表 查询载入的指令
 
 #### 自定义回执文本(.str)
 
@@ -594,302 +655,6 @@ sb
 - 不良记录上传失败：无法生成云黑wid，可以在审判群内发warning申请补录
 
 ### 附录
-
-#### 默认回执文本
-
-可用的键值如下表（**非json格式且极不推荐整个复制放入**，请使用指令或综合管理面板**修改必要的文本**）
-
-```cpp
-{
-	{"strParaEmpty","参数不能为空×"},			//偷懒用万能回复
-	{"strParaIllegal","参数非法×"},			//偷懒用万能回复
-	{"stranger","用户"},			//{nick}无法获取非空昵称时的称呼
-	{"strAdminOptionEmpty","找{self}有什么事么？{nick}"},			//
-	{"strLogNew","{self}开始新日志记录√\n请适时用.log off暂停或.log end完成记录"},
-	{"strLogOn","{self}开始日志记录√\n可使用.log off暂停记录"},
-	{"strLogOnAlready","{self}正在记录中！"},
-	{"strLogOff","{self}已暂停日志记录√\n可使用.log on恢复记录"},
-	{"strLogOffAlready","{self}已经暂停记录！"},
-	{"strLogEnd","{self}已完成日志记录√\n正在上传日志文件{log_file}"},
-	{"strLogEndEmpty","{self}已结束记录√\n本次无日志产生"},
-	{"strLogNullErr","{self}无日志记录或已结束！"},
-	{"strLogUpSuccess","{self}已完成日志上传√\n请访问 https://logpainter.kokona.tech/?s3={log_file} 以查看记录"},
-	{"strLogUpFailure","{self}上传日志文件失败，正在第{retry}次重试…{ret}"},
-	{"strLogUpFailureEnd","很遗憾，{self}无法成功上传日志文件×\n{ret}\n如需获取可联系Master:{master_QQ}\n文件名:{log_file}"},
-	{"strGMTableShow","{self}记录的{table_name}列表："},
-	{"strGMTableNotExist","{self}没有保存的{table_name}记录"},
-	{"strUserTrustShow","{user}在{self}处的信任级别为{trust}"},
-	{"strUserTrusted","已将{self}对{user}的信任级别调整为{trust}"},
-	{"strUserTrustDenied","{nick}在{self}处无权访问对方的权限×"},
-	{"strUserTrustIllegal","将目标权限修改为{trust}是非法的×"},
-	{"strUserNotFound","{self}无{user}的用户记录"},
-	{"strGroupAuthorized","A roll to the table turns to a dice fumble!\nDice Roller {strSelfName}√\n本群已授权许可，请尽情使用本骰娘√\n请遵守协议使用，服务结束后使用.dismiss送出!" },
-	{"strGroupLicenseDeny","本群未获{self}许可使用，自动在群内静默。\n请先.help协议 阅读并同意协议后向运营方申请许可使用，\n否则请管理员使用!dismiss送出{self}\n可按以下格式填写并发送申请:\n!authorize 申请用途:[ **请写入理由** ] 我已了解Dice!基本用法，仔细阅读并保证遵守{strSelfName}的用户协议，如需停用指令使用[ **请写入指令** ]，用后使用[ **请写入指令** ]送出群" },
-	{"strGroupLicenseApply","此群未通过自助授权×\n许可申请已发送√" },
-	{"strGroupSetOn","现已开启{self}在此群的“{option}”选项√"},			//群内开关和遥控开关通用此文本
-	{"strGroupSetOnAlready","{self}已在此群设置了{option}！"},			
-	{"strGroupSetOff","现已关闭{self}在此群的“{option}”选项√"},			
-	{"strGroupSetOffAlready","{self}未在此群设置{option}！"},
-	{"strGroupSetAll","{self}已修改记录中{cnt}个群的“{option}”选项√"},
-	{"strGroupDenied","{nick}在{self}处无权访问此群的设置×"},
-	{"strGroupSetDenied","{nick}在{self}处设置{option}的权限不足×"},
-	{"strGroupSetNotExist","{self}无{option}此选项×"},
-	{"strGroupWholeUnban","{self}已关闭全局禁言√"},
-	{"strGroupWholeBan","{self}已开启全局禁言√"},
-	{"strGroupWholeBanErr","{self}开启全局禁言失败×"},
-	{"strGroupUnban","{self}裁定:{member}解除禁言√"},
-	{"strGroupBan","{self}裁定:{member}禁言{res}分钟√"},
-	{"strGroupBanErr","{self}禁言{member}失败×"},
-	{"strGroupNotFound","{self}无该群记录×"},
-	{"strGroupNotIn","{self}当前不在该群或对象不是群！"},
-	{"strGroupExit","{self}已退出该群√"},
-	{"strGroupCardSet","{self}已将{target}的群名片修改为{card}√"},
-	{"strGroupCardSetErr","{self}设置{target}的群名片失败×"},
-	{"strGroupTitleSet","{self}已将{target}的头衔修改为{title}√"},
-	{"strGroupTitleSetErr","{self}设置{target}的头衔失败×"},
-	{"strPcNewEmptyCard","已为{nick}新建{type}空白卡{char}√"},
-	{"strPcNewCardShow","已为{nick}新建{type}卡{char}：{show}"},//由于预生成选项而存在属性
-	{"strPcCardSet","已将{nick}当前角色卡绑定为{char}√"},//{nick}-用户昵称 {pc}-原角色卡名 {char}-新角色卡名
-	{"strPcCardReset","已解绑{nick}当前的默认卡√"},//{nick}-用户昵称 {pc}-原角色卡名
-	{"strPcCardRename","已将{old_name}重命名为{new_name}√"},
-	{"strPcCardDel","已将角色卡{char}删除√"},
-	{"strPcCardCpy","已将{char2}的属性复制到{char1}√"},
-	{"strPcClr","已清空{nick}的角色卡记录√"},
-	{"strPcCardList","{nick}的角色列表：{show}"},
-	{"strPcCardBuild","{nick}的{char}生成：{show}"},
-	{"strPcCardShow","{nick}的<{type}>{char}：{show}"},	//{nick}-用户昵称 {type}-角色卡类型 {char}-角色卡名
-	{"strPcCardRedo","{nick}的{char}重新生成：{show}"},
-	{"strPcGroupList","{nick}的各群角色列表：{show}"},
-	{"strPcNotExistErr","{self}无{nick}的角色卡记录，无法删除×"},
-	{"strPcCardFull","{nick}在{self}处的角色卡已达上限，请先清理多余角色卡×"},
-	{"strPcTempInvalid","{self}无法识别的角色卡模板×"},
-	{"strPcNameEmpty","名称不能为空×"},
-	{"strPcNameExist","{nick}已存在同名卡×"},
-	{"strPcNameNotExist","{nick}无该名称角色卡×"},
-	{"strPcNameInvalid","非法的角色卡名（存在冒号）×"},
-	{"strPcInitDelErr","{nick}的初始卡不可删除×"},
-	{"strPcNoteTooLong","备注长度不能超过255×"},
-	{"strPcTextTooLong","文本长度不能超过48×"},
-	{"strCensorCaution","提醒：{nick}的指令包含敏感词，{self}已上报"},
-	{"strCensorWarning","警告：{nick}的指令包含敏感词，{self}已记录并上报！"},
-	{"strCensorDanger","警告：{nick}的指令包含敏感词，{self}拒绝指令并已上报！"},
-	//{"strCensorCritical","警告：{nick}的指令包含敏感词，{self}已记录并上报！"},
-	{"strSpamFirstWarning","你短时间内对{self}指令次数过多！请善用多轮掷骰和复数生成指令（刷屏初次警告）"},
-	{"strSpamFinalWarning","请暂停你的一切指令，避免因高频指令被{self}拉黑！（刷屏最终警告）"},
-	{"strReplySet","{self}对关键词{key}的回复已设置√"},
-	{"strReplyDel","{self}对关键词{key}的回复已清除√"},
-	{"strStModify","{self}对已记录{pc}的属性变化:"},		//存在技能值变化情况时，优先使用此文本
-	{"strStDetail","{self}对已设置{pc}的属性："},		//存在掷骰时，使用此文本(暂时无用)
-	{"strStValEmpty","{self}未记录{attr}原值×"},		
-	{"strBlackQQAddNotice","{user_nick}，你已被{self}加入黑名单，详情请联系Master:{master_QQ}"},				
-	{"strBlackQQAddNoticeReason","{user_nick}，由于{reason}，你已被{self}加入黑名单，申诉解封请联系管理员。Master:{master_QQ}"},
-	{"strBlackQQDelNotice","{user_nick}，你已被{self}移出黑名单，现在可以继续使用了"},
-	{"strWhiteQQAddNotice","{user_nick}，您已获得{self}的信任，请尽情使用{self}√"},
-	{"strWhiteQQDenied","你不是{self}信任的用户×"},
-	{"strWhiteGroupDenied","本群聊不在白名单中×"},
-	{"strDeckProNew","已新建自定义牌堆√"},
-	{"strDeckProSet","已将{deck_name}设置为默认牌堆√"},
-	{"strDeckProClr","已删除默认牌堆√"},
-	{"strDeckProNull","默认牌堆不存在!"},
-	{"strDeckTmpReset","已重置卡牌√"},
-	{"strDeckTmpShow","当前剩余卡牌:"},
-	{"strDeckTmpEmpty","已无剩余卡牌！"},		//剩余卡牌数为0
-	{"strDeckTmpNotFound","不存在剩余卡牌×"},	//没有生成过牌堆
-	{"strDeckNameEmpty","未指定牌堆名×"},
-	{"strRollDice","{pc}掷骰: {res}"},
-	{"strRollDiceReason","{pc}掷骰 {reason}: {res}"},
-	{"strRollHidden","{pc}进行了一次暗骰"},
-	{"strRollTurn","{pc}的掷骰轮数: {turn}轮"},
-	{"strRollMultiDice","{pc}掷骰{turn}次: {dice_exp}={res}"},
-	{"strRollMultiDiceReason","{pc}掷骰{turn}次{reason}: {dice_exp}={res}"},
-	{"strRollSkill","{pc}进行{attr}检定："},
-	{"strRollSkillReason","由于{reason} {pc}进行{attr}检定："},
-	{"strEnRoll","{pc}的{attr}增强或成长检定：\n{res}"},//{attr}在用户省略技能名后替换为{strEnDefaultName}
-	{"strEnRollNotChange","{strEnRoll}\n{pc}的{attr}值没有变化"},
-	{"strEnRollFailure","{strEnRoll}\n{pc}的{attr}变化{change}点，当前为{final}点"},
-	{"strEnRollSuccess","{strEnRoll}\n{pc}的{attr}增加{change}点，当前为{final}点"},
-	{"strEnDefaultName","属性或技能"},//默认文本
-	{"strEnValEmpty", "未对{self}设定待成长属性值，请先.st {attr} 属性值 或查看.help en×"},
-	{"strEnValInvalid", "{attr}值输入不正确,请输入1-99范围内的整数!"},
-	{"strSendMsg","{self}已将消息送出√"},//Master定向发送的回执
-	{"strSendMasterMsg","消息{self}已发送给Master√"},//向Master发送的回执
-	{"strSendMsgEmpty","发送消息内容为空×"},
-	{"strSendMsgInvalid","{self}没有可以发送的对象×"},//没有Master
-	{"strDefaultCOCClr","默认检定房规已清除√"},
-	{"strDefaultCOCNotFound","默认检定房规不存在×"},
-	{"strDefaultCOCSet","默认检定房规已设置:"},
-	{"strLinked","{self}已为对象建立链接√"},
-	{"strLinkClose","{self}已断开与对象的链接√" },
-	{"strLinkBusy","{nick}的目标已经有对象啦×\n{self}不支持多边关系" },
-	{"strLinkedAlready","{self}正在被其他对象链接×\n请{nick}先断绝当前关系" },
-	{"strLinkingAlready","{self}已经开启链接啦!" },
-	{"strLinkCloseAlready","{self}断开链接失败：{nick}当前本就没有对象！" },
-	{"strLinkNotFound","{self}找不到{nick}的对象×"},
-	{"strNotMaster","你不是{self}的master！你想做什么？"},
-	{"strNotAdmin","你不是{self}的管理员×"},
-	{"strAdminDismiss","{strDismiss}"},					//管理员指令退群的回执
-	{"strDismiss",""},						//.dismiss退群前的回执
-	{"strHlpSet","已为{key}设置词条√"},
-	{"strHlpReset","已清除{key}的词条√"},
-	{"strHlpNameEmpty","Master想要自定义什么词条呀？"},
-	{"strHelpNotFound","{self}未找到【{help_word}】相关的词条×"},
-	{"strHelpSuggestion","{self}猜{nick}想要查找的是:{res}"},
-	{"strClockToWork","{self}已按时启用√"},
-	{"strClockOffWork","{self}已按时关闭√"},
-	{"strNameGenerator","{pc}的随机名称：{res}"},
-	{"strDrawCard", "来看看{pc}抽到了什么：{res}"},
-	{"strMeOn", "成功在这里启用{self}的.me命令√"},
-	{"strMeOff", "成功在这里禁用{self}的.me命令√"},
-	{"strMeOnAlready", "在这里{self}的.me命令没有被禁用!"},
-	{"strMeOffAlready", "在这里{self}的.me命令已经被禁用!"},
-	{"strObOn", "成功在这里启用{self}的旁观模式√"},
-	{"strObOff", "成功在这里禁用{self}的旁观模式√"},
-	{"strObOnAlready", "在这里{self}的旁观模式没有被禁用!"},
-	{"strObOffAlready", "在这里{self}的旁观模式已经被禁用!"},
-	{"strObList", "当前{self}的旁观者有:"},
-	{"strObListEmpty", "当前{self}暂无旁观者"},
-	{"strObListClr", "{self}成功删除所有旁观者√"},
-	{"strObEnter", "{nick}成功加入{self}的旁观√"},
-	{"strObExit", "{nick}成功退出{self}的旁观√"},
-	{"strObEnterAlready", "{nick}已经处于{self}的旁观模式!"},
-	{"strObExitAlready", "{nick}没有加入{self}的旁观模式!"},
-	{"strQQIDEmpty", "QQ号不能为空×"},
-	{"strGroupIDEmpty", "群号不能为空×"},
-	{"strBlackGroup", "该群在黑名单中，如有疑问请联系master"},
-	{"strBotOn", "成功开启{self}√"},
-	{"strBotOff", "成功关闭{self}√"},
-	{"strBotOnAlready", "{self}已经处于开启状态!"},
-	{"strBotOffAlready", "{self}已经处于关闭状态!"},
-	{"strRollCriticalSuccess", "大成功！"}, //一般检定用
-	{"strRollExtremeSuccess", "极难成功"},
-	{"strRollHardSuccess", "困难成功"},
-	{"strRollRegularSuccess", "成功"},
-	{"strRollFailure", "失败"},
-	{"strRollFumble", "大失败！"},
-	{"strFumble", "大失败!"}, //多轮检定用，请控制长度
-	{"strFailure", "失败"},
-	{"strSuccess", "成功"},
-	{"strHardSuccess", "困难成功"},
-	{"strExtremeSuccess", "极难成功"},
-	{"strCriticalSuccess", "大成功!"},
-	{"strNumCannotBeZero", "无意义的数目！莫要消遣于我!"},
-	{"strDeckNotFound", "是说{deck_name}？{self}没听说过的牌堆名呢……"},
-	{"strDeckEmpty", "{self}已经一张也不剩了！"},
-	{"strNameNumTooBig", "生成数量过多!请输入1-10之间的数字!"},
-	{"strNameNumCannotBeZero", "生成数量不能为零!请输入1-10之间的数字!"},
-	{"strSetInvalid", "无效的默认骰!请输入1-9999之间的数字!"},
-	{"strSetTooBig", "这面数……让我丢个球啊!请输入1-9999之间的数字!"},
-	{"strSetCannotBeZero", "默认骰不能为零!请输入1-9999之间的数字!"},
-	{"strCharacterCannotBeZero", "人物作成次数不能为零!请输入1-10之间的数字!"},
-	{"strCharacterTooBig", "人物作成次数过多!请输入1-10之间的数字!"},
-	{"strCharacterInvalid", "人物作成次数无效!请输入1-10之间的数字!"},
-	{"strSanRoll", "{pc}的San Check：\n{res}"},
-	{"strSanRollRes", "{strSanRoll}\n{pc}的San值减少{change}点,当前剩余{final}点"},
-	{"strSanCostInvalid", "SC表达式输入不正确,格式为成功扣San/失败扣San,如1/1d6!"},
-	{"strSanInvalid", "San值输入不正确,请输入1-99范围内的整数!"},
-	{"strSanEmpty", "未设定San值，请先.st san 或查看.help sc×"},
-	{"strSuccessRateErr", "这成功率还需要检定吗？"},
-	{"strGroupIDInvalid", "无效的群号!"},
-	{"strSendErr", "消息发送失败!"},
-	{"strSendSuccess", "命令执行成功√"},
-	{"strDisabledErr", "命令无法执行:机器人已在此群中被关闭!"},
-	{"strActionEmpty", "动作不能为空×"},
-	{"strMEDisabledErr", "管理员已在此群中禁用.me命令!"},
-	{"strDisabledMeGlobal", "恕不提供.me服务×"},
-	{"strDisabledJrrpGlobal", "恕不提供.jrrp服务×"},
-	{"strDisabledDeckGlobal", "恕不提供.deck服务×"},
-	{"strDisabledDrawGlobal", "恕不提供.draw服务×"},
-	{"strDisabledSendGlobal", "恕不提供.send服务×"},
-	{"strHELPDisabledErr", "管理员已在此群中禁用.help命令!"},
-	{"strNameDelEmpty", "{nick}没有设置名称,无法删除!"},
-	{"strValueErr", "掷骰表达式输入错误!"},
-	{"strInputErr", "命令或掷骰表达式输入错误!"},
-	{"strUnknownErr", "发生了未知错误!"},
-	{"strUnableToGetErrorMsg", "无法获取错误信息!"},
-	{"strDiceTooBigErr", "{self}被你扔出的骰子淹没了×"},
-	{"strRequestRetCodeErr", "访问服务器时出现错误! HTTP状态码: {error}"},
-	{"strRequestNoResponse", "服务器未返回任何信息×"},
-	{"strTypeTooBigErr", "哇!让我数数骰子有多少面先~1...2..."},
-	{"strZeroTypeErr", "这是...!!时空裂({self}被骰子产生的时空裂缝卷走了)"},
-	{"strAddDiceValErr", "你这样要让{self}扔骰子扔到什么时候嘛~(请输入正确的加骰参数:5-10之内的整数)"},
-	{"strZeroDiceErr", "咦?我的骰子呢?"},
-	{"strRollTimeExceeded", "掷骰轮数超过了最大轮数限制!"},
-	{"strRollTimeErr", "异常的掷骰轮数"},
-	{"strDismissPrivate", "滚！"},
-	{"strWelcomePrivate", "你在这欢迎谁呢？"},
-	{"strWelcomeMsgClearNotice", "已清除本群的入群欢迎词√"},
-	{"strWelcomeMsgClearErr", "没有设置入群欢迎词，清除失败×"},
-	{"strWelcomeMsgUpdateNotice", "{self}已更新本群的入群欢迎词√"},
-	{"strPermissionDeniedErr", "请让群内管理对{self}发送该指令×"},
-	{"strSelfPermissionErr", "{self}权限不够无能为力呢×"},
-	{"strNameTooLongErr", "名称过长×(最多为50英文字符)"},
-	{"strNameClr", "已将{nick}的名称删除√"},
-	{"strNameSet", "已将{nick}的名称更改为{new_nick}√"},
-	{"strUnknownPropErr", "未设定{attr}成功率，请先.st {attr} 技能值 或查看.help rc×"},
-	{"strEmptyWWDiceErr", "格式错误:正确格式为.w(w)XaY!其中X≥1, 5≤Y≤10"},
-	{"strPropErr", "请认真的输入你的属性哦~"},
-	{"strSetPropSuccess", "属性设置成功√"},
-	{"strPropCleared", "已清空{char}的所有属性√"},
-	{"strRuleReset", "已重置默认规则√"},
-	{"strRuleSet", "已设置默认规则√"},
-	{"strRuleErr", "规则数据获取失败,具体信息:\n"},
-	{"strRulesFailedErr", "请求失败,{self}无法连接数据库×"},
-	{"strPropDeleted", "已删除{pc}的{attr}√"},
-	{"strPropNotFound", "属性{attr}不存在×"},
-	{"strRuleNotFound", "{self}未找到对应的规则信息×"},
-	{"strProp", "{pc}的{attr}为{val}"},
-	{"strPropList", "{nick}的{char}属性列表为：{show}"},
-	{"strStErr", "格式错误:请参考.help st获取.st命令的使用方法"},
-	{"strRulesFormatErr", "格式错误:正确格式为.rules[规则名称:]规则条目 如.rules COC7:力量"},
-	{"strLeaveDiscuss", "{self}现不支持讨论组服务，即将退出"},
-	{"strLeaveNoPower", "{self}未获得群管理，即将退群"},
-	{"strLeaveUnused", "{self}已经在这里被放置{day}天啦，马上就会离开这里了"},
-	{"strGlobalOff", "{self}休假中，暂停服务×"},
-	{"strPreserve", "{self}私有私用，勿扰勿怪\n如需申请许可请发送!authorize +[群号] 申请用途:[ **请写入理由** ] 我已了解Dice!基本用法，仔细阅读并保证遵守{strSelfName}的用户协议，如需停用指令使用[ **请写入指令** ]，用后使用[ **请写入指令** ]送出群"},
-	{"strJrrp", "{nick}今天的人品值是: {res}"},
-	{"strJrrpErr", "JRRP获取失败! 错误信息: \n{res}"},
-	{ "strFriendDenyNotUser", "很遗憾，你没有使用{self}的记录" },
-	{ "strFriendDenyNoTrust", "很遗憾，你不是{self}信任的用户" },
-	{"strAddFriendWhiteQQ", "{strAddFriend}"}, //白名单用户添加好友时回复此句
-	{
-		"strAddFriend",
-		R"(欢迎选择{strSelfName}的免费掷骰服务！
-.help协议 确认服务协议
-.help指令 查看指令列表
-.help设定 确认骰娘设定
-.help链接 查看源码文档
-使用服务默认已经同意服务协议)"
-	}, //同意添加好友时额外发送的语句
-	{
-		"strAddGroup",
-		R"(欢迎选择{strSelfName}的免费掷骰服务！
-请使用.dismiss QQ号（或后四位） 使{self}退群退讨论组
-.bot on/off QQ号（或后四位） //开启或关闭指令
-.group +/-禁用回复 //禁用或启用回复
-.help协议 确认服务协议
-.help指令 查看指令列表
-.help设定 确认骰娘设定
-.help链接 查看源码文档
-邀请入群默认视为同意服务协议，知晓禁言或移出的后果)"
-	},
-	{"strSelfName", ""},
-	{"strSelfCall", "&strSelfName"},
-	{"self", "&strSelfCall"},
-	{"strBotMsg", "\n使用.help更新 查看{self}更新内容"},
-	{
-		"strHlpMsg",
-		R"(请使用.dismiss QQ号（或后四位） 使{self}退群退讨论组
-.bot on/off QQ号（或后四位） //开启或关闭指令
-.help协议 确认服务协议
-.help指令 查看指令列表
-.help群管 查看群管指令
-.help设定 确认骰娘设定
-.help链接 查看源码文档
-官方论坛: https://forum.kokona.tech/
-论坛导航贴: https://kokona.tech)"
-	}
-}
-```
 
 #### 配置项目表
 **注：Disabled是不可用的意思！**
