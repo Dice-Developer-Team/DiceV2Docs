@@ -29,8 +29,9 @@
 
 ### 更新说明(2.6.0)
 
-- 支持reply使用多种触发模式与回复模式
-- 可使用WebUI进行远程图形化配置
+- 支持[reply](#自定义回复(.reply))使用多种触发模式与回复模式
+- 可使用[WebUI](#WebUI配置面板)进行远程图形化配置
+- .pc stat角色卡掷骰统计
 
 #### 更新说明(2.5.2)
 
@@ -132,7 +133,7 @@
 2. 将Dice.Driver.CQ.dll和Dice.Driver.CQ.json放入\data\MiraiNative\plugins文件夹（加载后自动启用）
 3. (Mirai自旧版升级)将根目录下device.json复制到根目录下（让Mirai继续使用先前的登录信息）
 
-### WebUI面板
+### WebUI配置面板
 
 WebUI是**全平台**可用的图形化配置页面，通过Dice!初始化时运行的监听端口访问。
 
@@ -140,14 +141,14 @@ WebUI是**全平台**可用的图形化配置页面，通过Dice!初始化时运
 
 在登录成功以后，Dice!会向Master(没有Master的情况下，自己) 发送WebUI运行的端口。如图中运行在8080端口。默认情况下，WebUI运行在一个随机的未使用的端口，但你可以通过WebUIPort属性更改。
 
-![img](https://dice-forum.s3.ap-northeast-1.amazonaws.com/2021-09-17/1631891867-619602-image.png)
+![启动初始化](image/WebUI_init.png)
 
 在本地(运行Dice的同一个设备)浏览器中输入`http://127.0.0.1:端口`进入WebUI 请一定要输入http://否则某些浏览器会卡死
 如果你在远程访问WebUI，请确定已配置好防火墙等，并使用对应的IP地址或域名访问（而不是127.0.0.1）
-![img](https://dice-forum.s3.ap-northeast-1.amazonaws.com/2021-09-17/1631892027-416085-image.png)
+![端口访问WebUI](image/WebUI_login.png)
 
 提示登录时，默认用户名为admin，密码为password，进入WebUI后可在WebUI配置栏更改密码。WebUI默认只允许本地访问，所以如果设备只有你一个人能访问（不是共享的云服务器等）不更改密码也无所谓。
-![img](https://dice-forum.s3.ap-northeast-1.amazonaws.com/2021-09-17/1631892075-326091-image.png)
+![主界面](image/WebUI_main.png)
 
 可以在上面执行管理操作，应该都符合直觉。需要注意的是你可以直接点击表格修改其中内容，表格中的修改无需点击保存等，会在编辑完成后自动生效。
 
@@ -165,12 +166,12 @@ WebUI有三个配置项，更改配置后重启才会生效
 `DICE_WEBUI_PORT_USE_VARIABLE` 使用另一个环境变量的值作为端口，比DICE_WEBUI_PORT有更高优先级，可用于PaaS等平台
 `DICE_WEBUI_ALLOW_INTERNET_ACCESS` 0为不允许, 1为允许
 
-### 配置远程访问
+#### 配置远程访问
 
 WebUI 使用 HTTP Digest验证，密码保存为Digest，理论上比较安全。然而，如果需要暴露到公网，我们仍然推荐使用nginx或apache等配置好TLS然后反向代理到Dice WebUI以确保安全。
 **当然，允许远程访问前请务必更改密码，不然再安全也没用。**
 
-### 管理面板
+### GUI管理面板
 
 **任意Windows框架**可对骰娘发送`.system gui`打开图形界面。
 
