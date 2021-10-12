@@ -1,6 +1,6 @@
 # Dice! Master手册
 
-*这是Dice!于2021.10.1更新2.6.0后对应的[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)*。用户指令请参考[用户手册](https://shiki.stringempty.xyz/Manual/Shiki_User_Manual.html)。更多内容可参看kokona论坛[https://forum.kokona.tech/](https://forum.kokona.tech/)。**本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
+*这是Dice!于2021.10.1更新2.6.0(586)后对应的[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)*。用户指令请参考[用户手册](https://shiki.stringempty.xyz/Manual/Shiki_User_Manual.html)。更多内容可参看kokona论坛[https://forum.kokona.tech/](https://forum.kokona.tech/)。**本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
 
 ### 目录
 
@@ -243,8 +243,6 @@ link用于管理员与特定窗口保持交流（尤其是新加入、待审核�
 `.system save` //立即存储所有数据（相当于执行所有停用应用时的操作）
 `.system load` //立即读取外置文件（模块、牌堆和角色卡模板）。便于不重载应用的反复调试。save/load涉及的文件见附录。
 ``.system state`` //显示插件运行时间及内存占用等硬件信息
-``.system clrimg`` //（不递归地）删除data\image\文件夹下所有（文件名长度达32的）图片，但保留被Dice！引用的图片（如welcome）；有其他插件调用缓存图片且不另存于文件夹，**不要使用此命令**以免影响其他插件正常运作；每清除一万张图片大约需要半分钟至一分钟，**避免在业务繁忙时使用此命令**。**权限5可用**。
-`.system reload` //立即保存数据后令框架（先驱）重载插件。第一次使用请保持远程连接监控，如重启后出现黄色提示框提醒上次未正常退出，请勾选【不再提醒】并确认，以免耽误重启。**权限5可用**。
 `.system rexplorer` //杀死资源管理器后重启。当 Windows 服务器内存占用逐渐随时间而升高时，考虑由资源管理器逐渐占用内存导致，可能适用该指令。**权限5可用**。
 
 #### 一键清群(.master groupclr)
@@ -253,7 +251,7 @@ link用于管理员与特定窗口保持交流（尤其是新加入、待审核�
 `.master groupclr` 可以实现一键退群，无参数时默认参数为unpower
 `.master groupclr [天数]` 将退出当前所有**骰娘在指定天数内未发言**的群
 `.master groupclr unpower` 将退出当前所有**骰娘不是群管/群主**的群
-`.master groupclr preserve` 将退出当前所有**无许可使用**的群
+`.master groupclr preserve` 将退出当前所有**无`许可使用`**的群
 `.master groupclr black` 将退出当前所有**黑名单群**和**有危险的黑名单用户**的群
 
 ### 全局配置
@@ -380,6 +378,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 受信任用户可通过在群内发送!authorize或在任意窗口发送!authorize +[群号]来为目标群添加【许可使用】。非信任用户也可在群内使用!authorize [理由]向窗口2发送许可申请。
 `!authorize (+[群号])` //受信任用户为本群+许可使用
 `!authorize (+[群号]) [理由]`  //非信任用户申请本群许可
+撤销许可使用需要使用`.group [群号] -许可使用`
 
 #### 批量群处理(.groups)
 
@@ -502,14 +501,14 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 
 指令回复中对用户（消息来源QQ）的通用转义如下：
 
-- `{at}`-at用户QQ
-- `{nick}`-取用户昵称，优先级为群内nn>全局nn>群名片>QQ昵称4
-- `{pc}`-取用户角色名，未录入角色卡则同{nick}
+- `{at}`-at用户QQ。
+- `{nick}`-取用户昵称，优先级为群内nn>全局nn>群名片>QQ昵称4。
+- `{pc}`-取用户角色名，未录入角色卡则同{nick}。
 
 部分转义方法：
 
-- `{help:条目名}`-获取帮助文档指定条目
-- `{sample:分项1|分项2(...|分项n)}`-从所有分项中随机均匀抽取一项插入文本
+- `{help:条目名}`-获取帮助文档指定条目。
+- `{sample:分项1|分项2(...|分项n)}`-从所有分项中随机均匀抽取一项插入文本。例：` {sample:效果拔群|}`
 
 #### 扩展指令
 
