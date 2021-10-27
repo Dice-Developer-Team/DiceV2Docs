@@ -1,11 +1,8 @@
 # Dice! Master手册
 
-*这是Dice!于2021.10.1更新2.6.0(586)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。
-
-用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。
-
-更多内容可参看kokona论坛[https://forum.kokona.tech/](https://forum.kokona.tech/)。
-
+*这是Dice!于2021.10.1更新2.6.0(586)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
+用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
+更多内容可参看kokona论坛[https://forum.kokona.tech/](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
 
 ### 目录
