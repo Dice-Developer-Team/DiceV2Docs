@@ -1,9 +1,19 @@
 # Dice! Master手册
 
+手册更新时间：20211028
+
 *这是Dice!于2021.10.1更新2.6.0(586)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
 用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
-更多内容可参看kokona论坛[https://forum.kokona.tech/](https://forum.kokona.tech/)。<br>
+更多内容可参看[Dice!论坛](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
+
+### 前言
+
+**感谢您选择Dice!**<br>
+此手册将帮助您了解Dice!的基本使用和配置<br>
+如果在使用中遇到任何问题或者有任何建议，请在阅读文档后访问[Dice!论坛](https://forum.kokona.tech/)提出你的想法<br>
+如果你认为此文档中有任何错误或值得改进的地方，欢迎点击右上方 Edit on GitHub 按钮修改文档。或者你也可以在论坛提出你的想法<br>
+祝跑团顺利！
 
 ### 目录
 
@@ -85,17 +95,19 @@
   6. 不支持发送语音
   7. 消息自动已读消息，手机端无法正常刷新私聊消息
   8. 开发团队已停止更新约一年，部分接口失效
+  9. 仅Windows
   
 - 小栗子(2.9.2)：
   1. 支持PC/手Q/平板登录
   2. 无法处理登录设备异常（触发短信验证则可正常登录）
   3. 不能收发讨论组消息
   4. 启动时只能选择所有保存的QQ都登录或都不登录
-  6. 主程序弹窗报错后无法正常工作
-  7. 拒绝好友申请无法发送理由
+  5. 主程序弹窗报错后无法正常工作
+  6. 拒绝好友申请无法发送理由
   7. **后续版本收费**
+  8. 仅Windows
   
-- MiraiNative(Mirai2.0）：
+- Mirai(2.x)：
   1. 支持手Q/平板登录
   2. 不能多开QQ，启动即登录
   3. 无法处理登录设备异常（但支持设备锁验证）
@@ -103,15 +115,23 @@
   5. 不能响应来自自己的消息
   6. 无法获取未加入群的群名/规模
   7. 不能收发讨论组消息
+  8. 支持Windows, Linux, MacOS, Android, iOS(测试中), DiceCloud云平台
+  
+
 #### 框架目录结构
 
-**先驱与小栗子目录**![先驱目录](_static/intro_xq_dir.png)
+**先驱与小栗子目录**![](_static/intro_xq_dir.png)
 
-**Mirai目录![Mirai目录](_static/intro_mirai2_dir.png)**
+**Mirai目录**![](_static/intro_mirai2_dir.png)
 
-#### 从2.5.0+版本升级
+非Windows系统可能目录稍微不一致，但文档中提到的应该适用于任何操作系统。Android版目录位置为内部存储空间/Android/data/io.github.mzdluo123.mirai.android/files/
 
-手机Mirai及先驱版本，需要将更新版的w4123.Dice.dll放入Diceki文件夹替换旧文件，并重载DiceDriver插件
+#### 2.5.0+版本升级
+
+- 先驱版本: 需要将更新版的w4123.Dice.dll放入Diceki文件夹替换旧文件，并重载DiceDriver插件
+- Mirai版本：执行Update.sh/更新.cmd
+- MiraiAndroid: 安装新版APK
+- 请关注论坛以获得具体版本的更新方法
 
 #### 从低版本升级到2.5.0+
 
@@ -130,13 +150,13 @@
 2. 将Dice.Driver.XQ.dll放入Plugin文件夹
 3. 加载后启用Dice.Driver
 
-##### Mirai2.0框架就地升级
+##### Mirai框架升级
 
-1. 在流泪猫猫头中卸载Dice!
-2. 将Dice.Driver.CQ.dll和Dice.Driver.CQ.json放入\data\MiraiNative\plugins文件夹（加载后自动启用）
-3. (Mirai自旧版升级)将根目录下device.json复制到根目录下（让Mirai继续使用先前的登录信息）
+1. 按照论坛中教程，使用新安装方法安装新版本Mirai
+2. 迁移Dice[DiceQQ]目录
+3. 将根目录下device.json复制到根目录下（让Mirai继续使用先前的登录信息）
 
-### WebUI配置面板
+### WebUI配置面板（推荐）
 
 WebUI是**全平台**可用的图形化配置页面，通过Dice!初始化时运行的监听端口访问。
 
@@ -146,7 +166,7 @@ WebUI是**全平台**可用的图形化配置页面，通过Dice!初始化时运
 
 ![启动初始化](image/WebUI_init.png)
 
-在本地(运行Dice的同一个设备)浏览器中输入`http://127.0.0.1:端口`进入WebUI 请一定要输入http://否则某些浏览器会卡死
+在本地(运行Dice的同一个设备)浏览器中输入`http://127.0.0.1:端口`进入WebUI 请一定要输入http://否则某些浏览器会卡死 <br>
 如果你在远程访问WebUI，请确定已配置好防火墙等，并使用对应的IP地址或域名访问（而不是127.0.0.1）
 ![端口访问WebUI](image/WebUI_login.png)
 
@@ -157,21 +177,21 @@ WebUI是**全平台**可用的图形化配置页面，通过Dice!初始化时运
 
 #### WebUI 配置
 
-WebUI有三个配置项，更改配置后重启才会生效
-`EnableWebUI` - 启用WebUI, 0为禁用, 1为启用, 默认为1
-`WebUIPort` - WebUI端口, 0为随机, 其他为固定端口
+WebUI有三个配置项，更改配置后重启才会生效<br>
+`EnableWebUI` - 启用WebUI, 0为禁用, 1为启用, 默认为1<br>
+`WebUIPort` - WebUI端口, 0为随机, 其他为固定端口<br>
 `WebUIAllowInternetAccess` - 允许从非本地地址访问WebUI, 0为不允许, 1为允许, 默认为0, 也就是WebUI默认只能从本地访问。如果你使用Docker网络等，你可能需要将此项设置为1才能在Docker宿主机上访问WebUI。
 
 #### WebUI 环境变量
 
-可以通过环境变量设置WebUI配置。环境变量具有较高优先级。
-`DICE_WEBUI_PORT` 设置端口，0为随机端口
-`DICE_WEBUI_PORT_USE_VARIABLE` 使用另一个环境变量的值作为端口，比DICE_WEBUI_PORT有更高优先级，可用于PaaS等平台
+可以通过环境变量设置WebUI配置。环境变量具有较高优先级。<br>
+`DICE_WEBUI_PORT` 设置端口，0为随机端口<br>
+`DICE_WEBUI_PORT_USE_VARIABLE` 使用另一个环境变量的值作为端口，比DICE_WEBUI_PORT有更高优先级，可用于PaaS等平台<br>
 `DICE_WEBUI_ALLOW_INTERNET_ACCESS` 0为不允许, 1为允许
 
 #### 配置远程访问
 
-WebUI 使用 HTTP Digest验证，密码保存为Digest，理论上比较安全。然而，如果需要暴露到公网，我们仍然推荐使用nginx或apache等配置好TLS然后反向代理到Dice WebUI以确保安全。
+WebUI 使用 HTTP Digest验证，密码保存为Digest，理论上比较安全。然而，如果需要暴露到公网，我们仍然推荐使用nginx或apache等配置好TLS然后反向代理到Dice WebUI以确保安全。<br>
 **当然，允许远程访问前请务必更改密码，不然再安全也没用。**
 
 ### GUI管理面板（已弃用）
@@ -196,11 +216,11 @@ Master功能初始默认关闭，你可以在WebUI/GUI管理面板完成认主�
 
 #### Master绑定/解绑
 
-Master模式初次开启后为无主状态，此时对骰娘`.master (private/public)` 将绑定身份。也可直接在管理面板设置Master。
-`.master (private)` 默认**私骰作成**，将自动开启私用模式
-`.master public` **公骰作成**，将骰娘初始化为公骰，自动调整相应的配置
-`.master delete` 解除绑定，骰娘此时会重回无主状态，清空通知窗口，但先前设定的配置不会初始化。
-`.master reset [新masterQQ]` 解除绑定，骰娘此时会认主[新masterQQ]（原Master保留信任级别）
+Master模式初次开启后为无主状态，此时对骰娘`.master (private/public)` 将绑定身份。也可直接在管理面板设置Master。<br>
+`.master (private)` 默认**私骰作成**，将自动开启私用模式<br>
+`.master public` **公骰作成**，将骰娘初始化为公骰，自动调整相应的配置<br>
+`.master delete` 解除绑定，骰娘此时会重回无主状态，清空通知窗口，但先前设定的配置不会初始化。<br>
+`.master reset [新masterQQ]` 解除绑定，骰娘此时会认主[新masterQQ]（原Master保留信任级别）<br>
 `.master admin`添加管理时自动将私聊添加为监视窗口，管理可以用`.admin delete`放弃权限，清除窗口可以私聊`.admin notice - me`
 
 ### 控制台指令
@@ -213,13 +233,13 @@ Master模式初次开启后为无主状态，此时对骰娘`.master (private/pu
 
 #### 遥控开关
 
-- `.admin boton/botoff [群号]` //等效于所在群群管使用.bot on/off
+- `.admin boton/botoff [群号]` //等效于所在群群管使用.bot on/off <br>
 - `.dismiss [群号]` //可以遥控骰娘退出所在的群，即使骰娘不在，也能将该群移出白名单 
 
 #### 消息发送(.send)
 
-send用于用户与管理员间的远程交流
-`.send 待发送消息` （任何人可用）向Master发送消息
+send用于用户与管理员间的远程交流<br>
+`.send 待发送消息` （任何人可用）向Master发送消息<br>
 `.send [窗口] [待发送消息]` //向指定窗口发送消息（权限4限定；**权限5用户发送的消息不会标明转发来源，等效于骰娘亲自说话**)
 
 **窗口**是指QQ收发消息的聊天窗口。窗口参数识别一下5种格式:
@@ -233,35 +253,35 @@ send用于用户与管理员间的远程交流
 
 #### 消息转发(.link)
 
-link用于管理员与特定窗口保持交流（尤其是新加入、待审核的群），或者操纵骰娘跑团  
-`.link to/from/with [窗口]` 当前窗口向目标窗口单向转发/单向接收/双向转发消息  
-`.link close` 关闭从当前聊天窗口发起的消息转发  
-`.link start` 开启上次建立的链接  
-**对象窗口为群/讨论组时，可省略group/discuss，直接输入群号；对象为私聊时，qq可简写为q**  
-**转发自Master的消息不会标明转发来源，等效于骰娘亲自说话**  
+link用于管理员与特定窗口保持交流（尤其是新加入、待审核的群），或者操纵骰娘跑团  <br>
+`.link to/from/with [窗口]` 当前窗口向目标窗口单向转发/单向接收/双向转发消息  <br>
+`.link close` 关闭从当前聊天窗口发起的消息转发  <br>
+`.link start` 开启上次建立的链接  <br>
+**对象窗口为群/讨论组时，可省略group/discuss，直接输入群号；对象为私聊时，qq可简写为q**  <br>
+**转发自Master的消息不会标明转发来源，等效于骰娘亲自说话**  <br>
 **无法确认目标聊天窗口是否存在，可能会导致没有反应**
 
 #### 系统指令(.system)
 
-`.system save` //立即存储所有数据（相当于执行所有停用应用时的操作）  
-`.system load` //立即读取外置文件（模块、牌堆和角色卡模板）。便于不重载应用的反复调试。save/load涉及的文件见附录。  
-`.system state` //显示插件运行时间及内存占用等硬件信息
+`.system save` //立即存储所有数据（相当于执行所有停用应用时的操作）  <br>
+`.system load` //立即读取外置文件（模块、牌堆和角色卡模板）。便于不重载应用的反复调试。save/load涉及的文件见附录。  <br>
+`.system state` //显示插件运行时间及内存占用等硬件信息<br>
 `.system rexplorer` //杀死资源管理器后重启。当 Windows 服务器内存占用逐渐随时间而升高时，考虑由资源管理器逐渐占用内存导致，可能适用该指令。**权限5可用**。
 
 #### 一键清群(.master groupclr)
 
-遍历群列表并退出符合条件的群，**也可以在应用菜单中【一键清退】**。部分框架群列表上限500，**请避免群数超过500**  
-`.master groupclr` 可以实现一键退群，无参数时默认参数为unpower  
-`.master groupclr [天数]` 将退出当前所有**骰娘在指定天数内未发言**的群  
-`.master groupclr unpower` 将退出当前所有**骰娘不是群管/群主**的群  
-`.master groupclr preserve` 将退出当前所有**无`许可使用`**的群  
+遍历群列表并退出符合条件的群，**也可以在应用菜单中【一键清退】**。部分框架群列表上限500，**请避免群数超过500**  <br>
+`.master groupclr` 可以实现一键退群，无参数时默认参数为unpower  <br>
+`.master groupclr [天数]` 将退出当前所有**骰娘在指定天数内未发言**的群  <br>
+`.master groupclr unpower` 将退出当前所有**骰娘不是群管/群主**的群  <br>
+`.master groupclr preserve` 将退出当前所有**无`许可使用`**的群  <br>
 `.master groupclr black` 将退出当前所有**黑名单群**和**有危险的黑名单用户**的群
 
 ### 全局配置
 
-配置项目表见[附录](#配置项目表)  
-`.admin [关键词]` //查看配置项状态，如.admin Private  
-`.admin [关键词]=[数值]` //修改配置项。一般的开关项1表示开启，0表示关闭
+配置项目表见[附录](#配置项目表)  <br>
+`.admin [关键词]` //查看配置项状态，如.admin Private  <br>
+`.admin [关键词]=[数值]` //修改配置项。一般的开关项1表示开启，0表示关闭<br>
 
 #### 通知窗口
 
