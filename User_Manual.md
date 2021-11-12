@@ -1,6 +1,6 @@
 # Dice! 用户手册
 
-本手册对应Dice!2.5.1版本，为用户指令提供说明。管理权限使用的指令请参考[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)。[点此下载本手册](https://shiki.stringempty.xyz/download/Shiki_User_Manual.pdf)![](_static/demo_bot.jpg)
+本手册对应Dice!2.6.0版本，为用户指令提供说明。管理权限使用的指令请参考[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)。[点此下载本手册](https://shiki.stringempty.xyz/download/Shiki_User_Manual.pdf)![](_static/demo_bot.jpg)
 
 [TOC]
 

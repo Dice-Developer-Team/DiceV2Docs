@@ -1,8 +1,8 @@
 # Dice! Master手册
 
-手册更新时间：20211028
+手册更新时间：20211111
 
-*这是Dice!于2021.10.1更新2.6.0(586)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
+*这是Dice!于2021.11.11更新2.6.0(587)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
 用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
 更多内容可参看[Dice!论坛](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
@@ -42,8 +42,9 @@
 
 #### 更新说明(2.6.0)
 
+- ww指令机制优化
 - 支持[reply](#自定义回复(.reply))使用多种触发模式与回复模式
-- 可使用[WebUI](#WebUI配置面板)进行远程图形化配置
+- 可使用[WebUI](#WebUI配置面板)进行远程图形化配置，原设置插件/综合管理重定向至WebUI
 - .pc stat角色卡掷骰统计
 
 #### 更新说明(2.5.2)
@@ -164,14 +165,13 @@ WebUI是**全平台**可用的图形化配置页面，通过Dice!初始化时运
 
 在登录成功以后，Dice!会向Master(没有Master的情况下，自己) 发送WebUI运行的端口。如图中运行在8080端口。默认情况下，WebUI运行在一个随机的未使用的端口，但你可以通过WebUIPort属性更改。
 
-![启动初始化](image/WebUI_init.png)
+![启动初始化](_static/WebUI_init.png)
 
-在本地(运行Dice的同一个设备)浏览器中输入`http://127.0.0.1:端口`进入WebUI 请一定要输入http://否则某些浏览器会卡死 <br>
-如果你在远程访问WebUI，请确定已配置好防火墙等，并使用对应的IP地址或域名访问（而不是127.0.0.1）
-![端口访问WebUI](image/WebUI_login.png)
+在本地(运行Dice的同一个设备)浏览器中输入`http://127.0.0.1:端口`进入WebUI **请一定要输入http://否则某些浏览器会卡死** <br>`.system gui`指令也会**引导打开WebUI**<br>如果你在远程访问WebUI，请确定已配置好防火墙等，并使用对应的IP地址或域名访问（而不是127.0.0.1）
+![端口访问WebUI](_static/WebUI_login.png)
 
 提示登录时，默认用户名为admin，密码为password，进入WebUI后可在WebUI配置栏更改密码。WebUI默认只允许本地访问，所以如果设备只有你一个人能访问（不是共享的云服务器等）不更改密码也无所谓。
-![主界面](image/WebUI_main.png)
+![主界面](_static/WebUI_main.png)
 
 可以在上面执行管理操作，应该都符合直觉。需要注意的是你可以直接点击表格修改其中内容，表格中的修改无需点击保存等，会在编辑完成后自动生效。
 
@@ -196,15 +196,13 @@ WebUI 使用 HTTP Digest验证，密码保存为Digest，理论上比较安全�
 
 ### GUI管理面板（已弃用）
 
-**任意Windows框架**可对骰娘发送`.system gui`打开图形界面。请注意此页面将不会继续更新并有可能在未来版本移除，推荐使用上方提到的WebUI进行设置修改。
+**任意Windows框架**可对骰娘发送`.system gui`打开图形界面（确认进入GUI，取消进入WebUI）。请注意此页面将不会继续更新并有可能在未来版本移除，推荐使用上方提到的WebUI进行设置修改。
 
 (MiraiNative)右键**托盘图标（流泪猫猫头）->（插件菜单）Dice!->综合管理**![Mirai面板入口](_static/demo_mirai_gui_entry.png)
 
 (先驱)**插件扩展->Dice.Driver(右键)->设置插件。单框架多开时请使用指令，避免错乱**![](_static/demo_xq_gui_entry.png)
 
 可在界面内设置Master、调整用户信任、修改CustomMsg文本、修改全局配置
-
-![图形界面1](_static/demo_gui_page1.png)
 
 ![图形界面2](_static/demo_gui_page2.png)
 
@@ -216,7 +214,7 @@ Master功能初始默认关闭，你可以在WebUI/GUI管理面板完成认主�
 
 #### Master绑定/解绑
 
-Master模式初次开启后为无主状态，此时对骰娘`.master (private/public)` 将绑定身份。也可直接在管理面板设置Master。认主时将自动开启全类型通知窗口，**建议将部分通知特别是通知窗口0转移到专门的小群**。<br>
+Master模式初次开启后为无主状态，此时对骰娘QQ发送`.master (private/public)` 将绑定发送者QQ为Master。也可直接在管理面板设置Master。认主时将自动开启全类型通知窗口，**建议将部分通知特别是通知窗口0转移到专门的小群**。<br>
 `.master (private)` 默认**私骰作成**，将自动开启私用模式<br>
 `.master public` **公骰作成**，将骰娘初始化为公骰，自动调整相应的配置<br>
 `.master delete` 解除绑定，骰娘此时会重回无主状态，清空通知窗口，但先前设定的配置不会初始化。<br>
@@ -229,8 +227,6 @@ Master模式初次开启后为无主状态，此时对骰娘`.master (private/pu
 
 `.admin state` 可以查看当前的全局设置和黑白名单情况
 
-**悬浮窗**：可右键**酷Q菜单->悬浮窗->Dice!->指令频度** 将悬浮窗显示的信息切换为每分钟的指令次数（实际是将5分钟内接受指令平滑化的结果）
-
 #### 遥控开关
 
 - `.admin boton/botoff [群号]` //等效于所在群群管使用.bot on/off <br>
@@ -242,7 +238,7 @@ send用于用户与管理员间的远程交流<br>
 `.send 待发送消息` （任何人可用）向Master发送消息<br>
 `.send [窗口] [待发送消息]` //向指定窗口发送消息（权限4限定；**权限5用户发送的消息不会标明转发来源，等效于骰娘亲自说话**)
 
-**窗口**是指QQ收发消息的聊天窗口。窗口参数识别一下5种格式:
+**窗口**是指QQ收发消息的聊天窗口。窗口参数识别一下6种格式:
 
 - qq [QQ号]
 - group [群号]
@@ -270,7 +266,7 @@ link用于管理员与特定窗口保持交流（尤其是新加入、待审核�
 
 #### 一键清群(.master groupclr)
 
-遍历群列表并退出符合条件的群，**也可以在应用菜单中【一键清退】**。部分框架群列表上限500，**请避免群数超过500**  <br>
+遍历群列表并退出符合条件的群，**也可以在应用菜单中【一键清退】**。部分框架群列表上限500，**请避免群数超过500**。单次清群上限受`GroupClearLimit`调节（默认一次至多退20个群）。 <br>
 `.master groupclr` 可以实现一键退群，无参数时默认参数为unpower  <br>
 `.master groupclr [天数]` 将退出当前所有**骰娘在指定天数内未发言**的群  <br>
 `.master groupclr unpower` 将退出当前所有**骰娘不是群管/群主**的群  <br>
@@ -310,8 +306,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 #### 定时长事件
 
 以下事件会在Dice!每运行固定时间后执行一次  <br>
-`.admin AutoSaveInterval=10` //定时保存(min)，默认每十分钟保存一次  <br>
-`.admin AutoClearImage=0` //定时清理图片(h)，默认关闭。作为参照，每120小时清理一次，清理量大约在10000~20000。  <br>
+`.admin AutoSaveInterval=5` //定时保存用户数据(min)，默认每5分钟保存一次  <br>
 `.admin AutoRemake=0` //定时重启(h)，默认关闭。  <br>
 **定时系统监测报警**(.admin SystemAlarmRAM/SystemAlarmCPU/SystemAlarmDisk=90) ：每半小时监测一次系统内存、CPU、硬盘占用(%)，超过阈值即报警。报警状态下每5分钟监测一次，如果数值升高超过1个百分点则继续报警，低于阈值则会提醒解除报警。设置在1-99时生效。
 
@@ -324,7 +319,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 `.user state` //查看自己用户记录  <br>
 `.user trust [用户qq]` //查看用户信任级别（4以上限定，上级对下级屏蔽）  <br>
 `.user trust [用户qq] [信任级别]` //调整用户信任级别（4以上限定，只能调整下级用户，最高为255）  <br>
-`.user diss [用户qq]` //拉黑用户(type=local,danger=1)
+`.user diss [用户qq]` //最轻的拉黑用户(type=local,danger=1)
 
 ##### 用户授信(.user trust)
 
@@ -358,7 +353,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 默认开启，仅好友验证方式为【需要验证信息】或【需要回答问题并由我确认】时有效，拦截消息并决定通过或拒绝。黑名单用户必定拒绝。同意好友邀请时将发送strAddFriend，特别地，通过受信任用户的好友时会发送strAddFriendWhiteQQ。当好友验证方式为【允许任何人】或【需要正确回答问题】时，通过开启**ListenFriendAdd**，也会向通过的好友发送strAddFriend，注意这种方式通过的好友可能仅为单向好友。
 
-#### 允许陌生好友邀请(.admin AllowStranger=1/2)
+#### 允许陌生好友邀请(.admin AllowStranger=0/1/2)
 
 默认为1。决定是否接受陌生人的好友邀请：2-无条件接受;1-无用户记录不接受;0-无信任不接受。该项设定建议配合QQ自带的【允许陌生人邀请我加入群聊】选项。
 
@@ -423,7 +418,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 认主时私骰作成进入私用模式，仅在**受信任**用户或【许可使用】群邀请时接受邀请，在**新加入管理员无信任用户**（否则为群自动添加【许可使用】）且**无【许可使用】的群**时自动退出，退出时自动留言。也可以用`.admin only/public` 切换私用/公用状态。
 
-#### 审核模式(.admin CheckGroupLicense=1/2)
+#### 审核模式(.admin CheckGroupLicense=0/1/2)
 
 入群后，对于无【许可使用】的群，将自动标记【未审核】并发送strAddGroupNoLicense。该项生效时将拒绝提供除help之外的其他服务，其余指令仅authorize/dismiss/bot有效。该项为1时拒绝所有【未审核】的群（不溯及审核模式开启前已加入的群），该项为2时拒绝所有无【许可使用】的群（含开启前已加入的群）。
 
@@ -454,7 +449,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 #### 邀请人连带(.admin KickedBanInviter/BannedBanInviter=1)
 
-默认开启。被移出、禁言时将入群邀请者同时加入黑名单。<br>
+默认开启。被移出/禁言时将入群邀请者同时加入黑名单。<br>
 *邀请者责任源于协议中不得擅自拉群的规定，这里的擅自是双向的：一边无视骰娘协议，一边无视群内意愿*
 
 ### 云操作(.cloud)
@@ -489,13 +484,13 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 #### 云记录注销
 
-当前记录核销在群(754494359)内完成，入群后私聊Shiki(Justice)(2131847004)，以下指令是有效的：<br>
+当前记录核销在群(754494359)内完成，入群后可使用以下指令：<br>
 
 - isbanqq=[qq] 查询目标QQ的云记录
 - 查询wid=[wid] 获取wid对应的记录
 - erase=[wid] 注销wid对应的记录，仅记录中的当事骰娘(DiceMaid)和骰主(masterQQ)可用
 
-也可请求管理来完成注销，最通用证明材料为：当事人对当事骰娘发送.admin isban [本人QQ]，连同骰娘回复将聊天记录转发给管理。
+可私聊司令塔Bot`Shiki(Pope)(530136753)`（具体角色可能会有变动）进行上述操作。也可请求管理来完成注销，最通用证明材料为：当事人对当事骰娘发送.admin isban [本人QQ]，连同骰娘回复将聊天记录转发给管理。
 
 #### 用户自行解黑
 
@@ -505,7 +500,7 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 #### 框架消息富文本转义（CQ码）
 
-DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等）转换为统一的CQ码
+DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等）转换为统一的CQ码，发送时则会转义回
 
 `[CQ:image,file=xxx.abc]` 将本地`[框架根目录]/data/image/xxx.abc`位置的图片上传并在消息中发送
 
@@ -513,9 +508,13 @@ DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等�
 
 `[CQ:record,file=xxx.silk]`将本地`[框架根目录]/data/record/xxx.silk`位置的语音上传并覆盖整条消息内容发送
 
+`[CQ:face,id=xxx]` 发送对应id的QQ黄豆表情
+
+`[CQ:emoji,id=xxx]` 发送对应十进制编码的Unicode字符
+
 #### 消息送间隔(.admin SendIntervalIdle=500)
 
-一般地，Dice!的待发送QQ消息不会立即发送，而是进入发送队列排队发送，并在每次发送后等待固定时间，即发送间隔(ms)。
+一般地，Dice!的待发送QQ消息不会立即发送，而是进入发送队列排队发送，并在每次发送后等待固定时间，即发送间隔(ms)。`SendIntervalIdle`控制闲时发送间隔，`SendIntervalBusy`控制忙时发送间隔。
 
 特别地，Dice!识别一条待发送消息中的分页符(`'\f'`)，并沿分页符将消息拆成多条，依序送入消息发送队列。分页符无法在指令输入时直接录入，可以输入{FormFeed}作为消息分段，调用时会自动转义。
 
@@ -527,7 +526,7 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 
 #### 自定义文本转义
 
-回复文本中可以通过特定的{}标记转义文本，注意花括号不能嵌套。
+回复文本中可以通过特定的{}标记转义文本，注意花括号目前不能嵌套。
 
 指令回复中对用户（消息来源QQ）的通用转义如下：
 
@@ -538,7 +537,7 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 部分转义方法：
 
 - `{help:条目名}`-获取帮助文档指定条目。
-- `{sample:分项1|分项2(...|分项n)}`-从所有分项中随机均匀抽取一项插入文本。例：` {sample:效果拔群|}`
+- `{sample:分项1|分项2(...|分项n)}`-从所有分项中随机均匀抽取一项插入文本。例：` {sample:效果拔群|干得漂亮}`
 
 #### 扩展指令
 
@@ -563,8 +562,6 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 }
 ```
 
-
-
 #### 自定义回复(.reply)
 
 未视为指令而响应的消息，将按完全匹配->模糊匹配->正则匹配的顺序检测触发词。**触发回复也会算入刷屏计数！**<br>
@@ -579,9 +576,9 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 - 回复模式：Deck-牌堆（回复词以分隔符'|'切割为牌堆）Text-直接返回回复词；Lua-将回复词作为Lua语句执行，将返回值回复。
 
 `.reply show [触发词]` 查看指定回复<br>
-`.reply del [触发词]` 清除触发词
+`.reply del [触发词]` 清除触发词<br>`.reply list` 列出全部触发词<br>
 
-默认可使用`.help回复列表 查询载入的指令
+默认可使用`.help回复列表` 查询触发词，帮助文档对所有人可见，建议手动修饰。
 
 #### 自定义回执文本(.str)
 
@@ -590,7 +587,7 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 `.[键值] NULL` ——自定义文本为空白<br>
 `.[键值] show` ——查看自定义文本
 
-**强烈建议自定义strHlpMsg和strAddFriend、strAddGroup，向不熟悉的用户介绍私骰的特别之处（申请、使用须知）**
+**如果没有设置，strSelfName和strSelfCall将预设为QQ昵称，并且{self}会自动替换为strSelfCall，前者用于自我展示，后者用于自称。强烈建议自定义strHlpMsg和strAddFriend、strAddGroup，向不熟悉的用户介绍私骰的特别之处（申请、使用须知）。**
 
 例:
 ```
@@ -604,16 +601,12 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 
 ![](_static/demo_str.png)
 
-**如果没有设置，strSelfName和strSelfCall将预设为QQ昵称，并且{self}会自动替换为strSelfCall**
-
 #### 自定义敏感词库(.admin censor)
 
-敏感词设置.admin censor  <br>
-.admin censor +([触发等级])=\[敏感词0](|[敏感词1]...) //添加敏感词  <br>
-.admin censor -\[敏感词0](|[敏感词1]...) //移除敏感词  <br>
-例:.admin censor +=nmsl //将“nmsl”设置为Warning级  <br>
-.admin censor +Danger=nn老公|nn主人 //将“nn老公”、“nn主人”设置为Danger级  <br>
-.admin censor -手枪 //移除敏感词“手枪”
+敏感词设置.admin censor  <br>`.admin censor +([触发等级])=\[敏感词0](|[敏感词1]...)` //添加敏感词  <br>`
+.admin censor -\[敏感词0](|[敏感词1]...)` //移除敏感词  <br>
+例:`.admin censor +=nmsl` //将“nmsl”设置为Warning级  <br>`.admin censor +Danger=nn老公|nn主人` //将“nn老公”、“nn主人”设置为Danger级  <br>`
+.admin censor -手枪` //移除敏感词“手枪”
 
 ##### 匹配机制
 
