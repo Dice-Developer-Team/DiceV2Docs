@@ -20,12 +20,12 @@ from recommonmark.transform import AutoStructify
 # -- Project information -----------------------------------------------------
 
 project = 'Dice!'
-copyright = '2020, Suhui & Shiki'
+copyright = '2020-2021, Suhui & Shiki'
 author = 'Suhui & Shiki'
 master_doc = 'index'
 
 # The full version, including alpha/beta/rc tags
-release = '2.4.0'
+release = '2.6.0'
 
 
 # -- General configuration ---------------------------------------------------
