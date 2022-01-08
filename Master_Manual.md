@@ -1,8 +1,8 @@
 # Dice! Master手册
 
-手册更新时间：20211111
+手册更新时间：20211220
 
-*这是Dice!于2021.11.11更新2.6.0(587)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
+*这是Dice!于2021.12.18更新2.6.1(592)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
 用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
 更多内容可参看[Dice!论坛](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
@@ -39,6 +39,16 @@
 - [附录](#附录)
 - [更新历史](#更新历史)
 - [后记](#后记)
+
+#### 更新说明(2.6.1)
+
+- lua新增http.get/http.post等函数
+- 对lua优化require路径，现在require可以读取Diceki/lua/文件夹下的lua或dll了
+- [CustomMsg](#自定义回执文本(.str))不再兼容远古版本的序号转义（形如{0}{1}），请手动调整
+- 新增.bot信息抬头strBotHeader，请自定义（默认发布版写作"标准型"，测试版写作"试作型"）
+- [自定义回复](#)新增前缀匹配模式
+- 新增.ak指令
+- WebUI提供reply跨行编辑按钮
 
 #### 更新说明(2.6.0)
 
@@ -120,8 +130,6 @@
   
 
 #### 框架目录结构
-
-**先驱与小栗子目录**![](_static/intro_xq_dir.png)
 
 **Mirai目录**![](_static/intro_mirai2_dir.png)
 
@@ -567,12 +575,12 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 未视为指令而响应的消息，将按完全匹配->模糊匹配->正则匹配的顺序检测触发词。**触发回复也会算入刷屏计数！**<br>
 ```
 .reply set (Type=[回复性质](Reply/Order)) 
-[匹配模式](Match/Search/Regex)=[触发词]
+[匹配模式](Match/Search/Prefix/Regex)=[触发词]
 [回复模式](Deck/Text/Lua)=[回复词]
 ```
 
 - 回复性质：决定该回复由`停用指令`(bot off)还是`禁用回复`(reply off)控制开关。该项可省略，默认由reply控制。
-- 匹配模式：Match-完全匹配；Search-模糊匹配；Regex-正则匹配。
+- 匹配模式：Match-完全匹配；Search-模糊匹配；Prefix-前缀匹配；Regex-正则匹配。
 - 回复模式：Deck-牌堆（回复词以分隔符'|'切割为牌堆）Text-直接返回回复词；Lua-将回复词作为Lua语句执行，将返回值回复。
 
 `.reply show [触发词]` 查看指定回复<br>
@@ -583,7 +591,7 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 #### 自定义回执文本(.str)
 
 将系统处理事件的回执替换为自定义文本<br>
-`.[键值] [文本]` ——自定义骰娘的某类回执<br>
+`.[键值] [文本]` ——自定义骰娘的某类回执<br>`.[键值] reset` ——重置为内置文本<br>
 `.[键值] NULL` ——自定义文本为空白<br>
 `.[键值] show` ——查看自定义文本
 
