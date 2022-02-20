@@ -129,6 +129,7 @@ MiraiAndroid是当前不使用模拟器在**手机挂载Dice**的唯一选择，
   2. 固定PC设备登录，协议可以选PC版QQ或者PC版TIM等
   3. 允许多开QQ，支持扫码登录
   4. 因为程序缺陷，会出现连接服务器失败、“与服务器北京时间相差超过1秒”等问题
+  4. 无法私聊发送语音文件
 - MyQQA（MQ安卓版）：
   1. 由于程序不支持附加调试，存在未排除的异常风险
   2. 支持手Q/平板登录
@@ -170,12 +171,6 @@ MiraiAndroid是当前不使用模拟器在**手机挂载Dice**的唯一选择，
 - 原Dice2.3.8exp9及以上版本酷Q骰娘：根目录下的DiceData文件夹![CQ根目录下的DiceData文件夹](_static/demo_cq_dicedata.png)
 
 如为原Dice2.3.8exp10(555)及以下版本：将data/app/com.w4123.dice复制到新目录[DiceData]/com.w4123.dice的位置。![data/app/com.w4123.dice](_static/demo_cq_appdata.png)
-
-##### 先驱框架就地升级
-
-1. 停止或卸载原有CQXQ插件，或在CQXQ中卸载Dice!
-2. 将Dice.Driver.XQ.dll放入Plugin文件夹
-3. 加载后启用Dice.Driver
 
 ##### Mirai框架升级
 
@@ -526,13 +521,13 @@ DisabledGlobal=1等价于.admin off（全局关闭）。开启时一切如常，
 
 #### 框架消息富文本转义（CQ码）
 
-DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等）转换为统一的CQ码，发送时则会转义回
+DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等）转换为统一的CQ码，发送时则会转义回框架格式
 
 `[CQ:image,file=xxx.abc]` 将本地`[框架根目录]/data/image/xxx.abc`位置的图片上传并在消息中发送
 
 `[CQ:image,id=xxx]`接收消息中的图片，id与服务器缓存图片对应，但区分群聊图片与私聊图片。群聊调用私聊消息的图片id将无法正常发送图片，反之同理。
 
-`[CQ:record,file=xxx.silk]`将本地`[框架根目录]/data/record/xxx.silk`位置的语音上传并覆盖整条消息内容发送
+`[CQ:record,file=xxx.silk]`将本地`[框架根目录]/data/record/xxx.silk`位置的语音上传并覆盖整条消息内容发送（Mirai不限制文件后缀）
 
 `[CQ:face,id=xxx]` 发送对应id的QQ黄豆表情
 
@@ -737,7 +732,7 @@ sb
 
 - Mirai显示**当前版本过低**：平板QQ(HD)已停止更新，该协议下各类登录失败原因都会写作“当前版本过低”，实际原因可能是账号登录被tx判定有风险，可以选择更换Mirai的登录协议。 
 
-框架登录通过的成功率：扫码登录>短信验证登录>无验证登录
+框架登录通过的成功率：**扫码登录>短信验证登录>无验证登录**
 
 #### 账号风控（屏蔽）
 
@@ -753,6 +748,11 @@ sb
 - jrrp获取失败：访问境外jrrp服务器失败会向后台报错，但用户会正常收到回执，不影响使用
 - log上传失败：访问境外log服务器失败，需要手动从\user\log\文件夹提取txt 
 - 不良记录上传失败：无法生成云黑wid，可以在审判群内发warning申请补录
+
+#### 磁盘空间占用增多
+
+- Mirai一键脚本使用.git更新文件，会造成.git文件夹堆积，如无回退需要可以直接删除
+- Dice目录下`user/log/`所存储的.log记录文件不会在log结束后销毁，需要手动清理
 
 ### 附录
 
