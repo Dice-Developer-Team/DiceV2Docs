@@ -37,6 +37,58 @@ You should have received a copy of the GNU Affero General Public License along w
 ]]
 ```
 
+## Mod结构
+
+Mod采用类Paradox风格结构。主文件为Dice存档目录/mod中的json文件，写有mod的标题、作者、版本信息、说明文本等。Mod目录与主文件同名，其下子目录存放不同类型文件。
+
+### Mod子目录
+
+#### reply
+
+以lua形式向表msg_reply写入关键词回复。load时读入，修改后需要`system load`应用。
+
+- keyword: 触发该回复的关键词，可以有多种触发形式和多个关键词。
+- limit: 触发限制条件。table键值表示`条件类型=条件内容`。
+- echo: 回复内容。值为文本时，回复该文本；值为数组时，作为牌堆回复；值为`{lua=文件名}`时，调用lua文件。
+
+```lua
+msg_reply.good_morning = {	--该条msg_reply的id，唯一对应，同名会覆盖
+    keyword = {
+        match = "早",
+        prefix = {"早安","早上好"},
+    },
+    limit = {
+        cd = { user = 60 },
+        today = { user = 1 },
+    },
+    echo = {
+        lua = "{reply_good_morning}"
+    }
+}
+```
+
+#### script
+
+script目录中的lua文件名（不含后缀）可作为loadLua函数的参数，也可直接作为关键词回复Lua形式的回复内容。
+
+script中的文件不会被预加载，而是调用时实时读取，因此热更新后不需要使用`.system load`加载。
+
+#### speech
+
+台词speech是自定义回执文本的上位，可直接由花括号转义。每项条目可存多条文本，等效于单抽放回的牌堆或{sample}。load时读入，修改后需要`system load`应用。
+
+```yaml
+reply_good_morning:
+ - "早上好啊{nick}"
+ - "那{nick}也早安哦"
+strRollDice: "{pc}掷骰：{res}"
+strRollRegularSuccess: 
+ - 成功了哦
+ - "成功 看来{self}还是护佑着{nick}的"
+```
+
+
+
 ## Lua快速教程
 
 *如果你已经了解过脚本语言lua，请跳过该部分.由于function使用小括号()输入参数，下文使用中括号[]表示参数可省略*
