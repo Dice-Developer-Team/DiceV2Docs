@@ -1,15 +1,15 @@
-# Dice!嵌入模块开发手册578
+# Dice!嵌入模块开发手册
 
 ## （原Shiki Plugin Manual）
 
 ## 简介
 
-本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复所作的说明，**当前对应最新版本Dice!2.6.1(592)**。通过在plugin目录放入lua脚本，Dice!将以前缀匹配的形式监听特定消息并回复，基于admin clock处理定时任务，从而实现骰主对骰娘的深度化定制。自定义指令旨在以下方面实现对Dice!内建指令的补充：
+本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复所作的说明，**当前对应最新版本Dice!2.6.3(606)**。通过在plugin目录放入lua脚本，Dice!将以前缀匹配的形式监听特定消息并回复，基于admin clock处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
 
 1. 过于客制化而无法使用现有数据结构表现的功能，如：基于D20结果的数值分段回复；
 2. 同人性质或版本各异的规则，如：JOJO团、圣杯团、方舟团等；
 3. 因受众过偏不适合写入骰娘源代码的规则；
-4. 与Dice!设计理念无关的指令，如：好感度系统；
+4. 非骰娘功能，如：好感度系统；
 
 从零编写lua脚本需要对lua有一定的了解，**建议使用VS Code等工具编辑脚本**。如果实在脚本苦手，手册附录准备了现成的样例脚本，你也**可以在Shiki官方群或论坛内找到Shiki免费发布共享的脚本**。Shiki的桌游指令集已收录：DND检定、ShadowRun、双重十字、永夜后日谈（命中检定）、祸不单行、山屋惊魂。**如果你只要安装现成脚本，只需记住在存档目录下创建plugin文件夹，将lua文件放入后启动或.system load。**如果你实在有想实现的指令，没办法修改现成脚本实现，也确实找不到人白嫖的话，可以联系Shiki定制。愿所有人能从Dice!骰娘处获得更好的用户体验，拥有自己独一无二的骰娘。
 
@@ -319,85 +319,234 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 
 ## 附录：Dice!预置的lua函数
 
-**调用前注意Dice版本是否匹配！**Dice!2.5.1预置函数总计18条。
+**调用前注意Dice版本是否匹配！**Dice!2.6.3总计19条预置函数，1条msg方法。
+
+*类型为number的参数，一般也可传入可数字化的字符串，如msg.fromGroup.*
+
+### log(info[,notice_level])
+
+发送日志
+
+| 传入参数     | 变量类型 | 说明                             |
+| ------------ | -------- | -------------------------------- |
+| 日志内容     | string   | 待输出日志内容                   |
+| 通知窗口级别 | number   | 选填，若空则只输出到框架日志界面 |
+
+### loadLua(scriptName)
+
+运行Lua文件，返回目标脚本的返回值(build575+)
+参数使用相对路径且无后缀，根目录为plugin文件夹或mod内script文件夹
+与Lua自带的require函数不同，目标文件定义的变量会保持生命周期
 
 ```lua
---运行其他Lua文件，返回目标脚本的返回值(build575+)
---参数使用相对路径且无后缀，根目录为plugin文件夹
---与Lua自带的require函数不同，目标文件定义的变量会保持生命周期
-loadLua(fileLua)
-例：loadLua("PC/COC7")
-
---取DiceQQ
-getDiceQQ()
-
---取Dice存档目录
-getDiceDir()
-
---创建指定文件夹
-mkDirs(dir_create)
-例：mkDirs(getDiceDir().."好感度")
-
---读群配置，如配置项不存在，返回默认值
---群配置包括【停用指令】【许可使用】一类词条
-getGroupConf(groupID, key_conf, val_default)
-例：getGroupConf(msg.fromQQ, "rc房规", 0)
-
---写群配置
-setGroupConf(groupID, key_conf, val_conf)
-例：setGroupConf(msg.fromGroup, "许可使用", true)
-
---读用户配置，如配置项不存在，返回默认值
-getUserConf(userQQ, key_conf, val_default)
-例：getUserConf(msg.fromQQ, "好感度", 0)
-
---写用户配置
-setUserConf(userQQ, key_conf, val_conf)
-例：setUserConf(msg.fromQQ, "好感度", getUserConf(msg.fromQQ, "好感度", 0)+1)
-
---读用户今日配置，如配置项不存在，返回0
---只能存取整数，使用该方法获取的jrrp项即为今日人品值
-getUserToday(userQQ, key_conf)
-例：getUserToday(msg.fromQQ, "jrrp")
-
---写用户今日配置
---所有今日配置数据会在当日24时清空
-setUserToday(userQQ, key_conf, val_conf)
-例：setUserToday(msg.fromQQ, "好感获取量", getUserToday(msg.fromQQ, "好感获取量", 0)+1)
-
---读PL在指定群的角色卡属性，如属性不存在，返回默认值(build575+)
-getPlayerCardAttr(plQQ, id_group, key_attr, val_default)
-例：getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
-
---写PL在指定群的角色卡属性值(build575+)
-setPlayerCardAttr(plQQ, id_group, key_attr, val_attr)
-例：setPlayerCardAttr(msg.fromQQ, msg.fromGroup, "hp", 9)
-
---将PL在指定群的整张角色卡作为table读取(build575+)
---开销较大，若非为了什么酷炫的功能请避免使用
-getPlayerCard(plQQ, id_group, key_attr, val_attr)
-例：getPlayerCard(msg.fromQQ, msg.fromGroup)
-
---取最小值到最大值区间内随机整数(含两端点)
-ranint(min, max)
-例：ranint(1, 6)
-
---等待指定毫秒数
-sleepTime(ms)
-例：sleepTime(5000)
-
---对指定群/指定用户的牌堆进行抽取,如第二个参数非0，表示从指定群抽，否则表示从指定QQ抽
-drawDeck(name_deck, id_group, id_QQ)
-例：drawDeck("俄罗斯轮盘", msg.fromGroup, msg.fromQQ)
-
---视为从指定群、指定用户处收到消息,如第二个参数为0表示私聊。消息不计入指令频度
-eventMsg(msg, fromGroup, fromQQ)
-例：eventMsg(".rc Rider Kick:70 踢西鹿", msg.fromGroup, msg.fromQQ)
-
---向指定群或指定用户发送消息,如第二个参数为0表示私聊。
-sendMsg(msg, fromGroup, fromQQ)
-例：sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
+loadLua("PC/COC7")
 ```
+
+| 传入参数  | 变量类型 | 说明                               |
+| --------- | -------- | ---------------------------------- |
+| lua文件名 | string   | 待调用mod/script/文件或plugin/文件 |
+
+| 返回值类型         | 说明                   |
+| ------------------ | ---------------------- |
+| 同文件内返回值类型 | 执行指定文件后的返回值 |
+
+### ranint(low,high)
+
+取随机数
+
+| 传入参数     | 变量类型 | 说明 |
+| ------------ | -------- | ---- |
+| 随机区间下限 | number   | 整数 |
+| 随机区间上限 | number   | 整数 |
+
+| 返回值类型 | 说明       |
+| ---------- | ---------- |
+| number     | 生成随机数 |
+
+### getDiceQQ()
+
+取Dice账号
+
+| 返回值类型 | 说明           |
+| ---------- | -------------- |
+| string     | 取骰子自身账号 |
+
+### getDiceDir()
+
+取Dice存档目录，用于自行读写文件
+
+| 返回值类型 | 说明           |
+| ---------- | -------------- |
+| string     | 取Dice存档目录 |
+
+### eventMsg(msg, fromGroup, fromUser)
+
+虚构一条消息进行处理，不计入指令频度。
+
+```lua
+eventMsg(".rc Rider Kick:70 踢西鹿", msg.fromGroup, msg.fromQQ)
+```
+
+| 输入参数 | 变量类型 | 说明                 |
+| -------- | -------- | -------------------- |
+| 消息文本 | string   |                      |
+| 来源群   | number   | 可以为纯数字的字符串 |
+| 发送者   | number   | 可以为纯数字的字符串 |
+
+### sendMsg(msg, fromGroup, fromUser)
+
+发送一条消息。
+
+```lua
+sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
+```
+
+| 输入参数 | 变量类型 | 说明                 |
+| -------- | -------- | -------------------- |
+| 消息文本 | string   |                      |
+| 目标群   | number   | 0视为私聊            |
+| 目标用户 | number   | 可以为纯数字的字符串 |
+
+### getUserToday(userID, keyConf, defaultVal)
+
+取用户今日数据项。配置项为"jrrp"时，所取为今日人品值。所有当日数据会在系统时间24时清空。
+
+```lua
+getUserToday(msg.fromQQ, "jrrp")
+```
+
+| 输入参数 | 变量类型 | 说明                           |
+| -------- | -------- | ------------------------------ |
+| 用户账号 | number   | 可以为纯数字的字符串           |
+| 配置项   | string   | 待取配置项                     |
+| 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+
+### setUserToday(userID, keyConf, val)
+
+存用户今日数据项
+
+| 输入参数 | 变量类型 | 说明                 |
+| -------- | -------- | -------------------- |
+| 用户账号 | number   | 可以为纯数字的字符串 |
+| 配置项   | string   | 待存配置项           |
+| 配置值   | 任意     | 待存值               |
+
+### getUserConf(userID, keyConf, defaultVal)
+
+取用户配置项
+
+```lua
+getUserConf(msg.fromQQ, "好感度", 0)
+```
+
+| 输入参数 | 变量类型 | 说明                           |
+| -------- | -------- | ------------------------------ |
+| 用户账号 | number   | 可以为纯数字的字符串           |
+| 配置项   | string   | 待取配置项                     |
+| 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+
+### setUserConf(userID, keyConf, val)
+
+存用户配置项
+
+| 输入参数 | 变量类型 | 说明                 |
+| -------- | -------- | -------------------- |
+| 用户账号 | number   | 可以为纯数字的字符串 |
+| 配置项   | string   | 待存配置项           |
+| 配置值   | 任意     | 待存值               |
+
+### getGroupConf(groupID, keyConf, defaultVal)
+
+取群配置项
+
+```lua
+getGroupConf(msg.fromQQ, "rc房规", 0)
+```
+
+| 输入参数 | 变量类型 | 说明                           |
+| -------- | -------- | ------------------------------ |
+| 群号     | number   | 可以为纯数字的字符串           |
+| 配置项   | string   | 待取配置项                     |
+| 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+
+### setGroupConf(groupID, keyConf, val)
+
+存群配置项
+
+| 输入参数 | 变量类型 | 说明                 |
+| -------- | -------- | -------------------- |
+| 群号     | number   | 可以为纯数字的字符串 |
+| 配置项   | string   | 待存配置项           |
+| 配置值   | 任意     | 待存值               |
+
+### getPlayerCard(userID, groupID)
+
+取角色卡（整张）
+
+| 输入参数 | 变量类型 | 说明                           |
+| -------- | -------- | ------------------------------ |
+| 用户账号 | number   | 可以为纯数字的字符串           |
+| 群号     | number   | 可以为纯数字的字符串           |
+
+### getPlayerCardAttr(userID, groupID, keyAttr, defaultVal)
+
+取角色卡属性
+
+```lua
+getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
+```
+
+| 输入参数 | 变量类型 | 说明                           |
+| -------- | -------- | ------------------------------ |
+| 用户账号 | number   | 可以为纯数字的字符串           |
+| 群号 | number   | 可以为纯数字的字符串           |
+| 属性   | string   | 待取属性                     |
+| 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+
+### setPlayerCardAttr(userID, groupID, keyConf, val)
+
+存角色卡属性
+
+| 输入参数 | 变量类型 | 说明                 |
+| -------- | -------- | -------------------- |
+| 用户账号 | number   | 可以为纯数字的字符串 |
+| 群号 | number   | 可以为纯数字的字符串 |
+| 属性   | string   | 待存属性           |
+| 属性值   | 任意     | 待存值               |
+
+### drawDeck(deckName, groupID, userID)
+
+从指定牌堆抽牌。
+
+```lua
+drawDeck("俄罗斯轮盘", msg.fromGroup, msg.fromQQ)
+```
+
+| 输入参数 | 变量类型 | 说明                 |
+| -------- | -------- | -------------------- |
+| 牌堆名   | string   | 优先抽取牌堆实例     |
+| 群号     | number   | 可以为纯数字的字符串 |
+| 用户账号 | number   | 可以为纯数字的字符串 |
+
+### mkDirs(pathDir)
+
+| 输入参数   | 变量类型 | 说明             |
+| ---------- | -------- | ---------------- |
+| 文件夹路径 | string   | 递归创建该文件夹 |
+
+### sleepTime(ms)
+
+| 输入参数   | 变量类型 | 说明 |
+| ---------- | -------- | ---- |
+| 等待毫秒数 | number   |      |
+
+### msg:echo(replyMsg)
+
+回复消息
+
+| 输入参数   | 变量类型 | 说明 |
+| ---------- | -------- | ---- |
+| 待回复消息 | string   |      |
 
 ## 附录：自定义指令常用的正则匹配
 
@@ -449,7 +598,7 @@ attempt to perform arithmetic on a nil value (global '%s')
 bad argument #5 to 'format'(number has no integer representation)
 -- 函数format的第5个参数类型错误，要求是整数，但传入是小数，或者是其余类型不能化为整数
 '}' expected (to close '{' at line 169) near '%s'
--- 脚本第169行的左花括号缺少配对的右花括号
+-- 脚本第169行的左花括号缺少配对的右花括号。此错误也可以由表格内缺少逗号分隔、括号外的中文等原因造成
 'end' expected (to close 'function' at line 240) near <eof>
 -- 脚本第240行的function缺少收尾的end，<eof>表示文件结束（找到文件末也没找到）
 'then' expected near 'end'
@@ -470,7 +619,11 @@ invalid option '%s'
 -- 传入的参数不是string或不在给定的字符串列表中
 ```
 
+## 附录：常用语法在线校验器
 
+- json: [在线JSON校验格式化工具](https://www.bejson.com/)
+- yaml: [YAML、YML在线编辑器(格式化校验)](https://www.bejson.com/validators/yaml_editor/)
+- lua: [在线运行Lua (bejso](https://www.bejson.com/runcode/lua/)
 
 ## 附录：DND规则.rdc指令
 
