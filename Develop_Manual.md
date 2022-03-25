@@ -59,11 +59,21 @@ msg_reply.good_morning = {	--该条msg_reply的id，唯一对应，同名会覆�
     },
     limit = {
         cd = { user = 60 },
-        today = { user = 1 },
+        today = { user = 1 },	--每用户当日触发次数
     },
     echo = {
-        lua = "{reply_good_morning}"
+        lua = "reply_good_morning"	--调用文件名对应lua
     }
+}
+msg_reply.good_night = {
+    keyword = {
+        prefix = "晚安",
+    },
+    limit = {
+        cd = { user = 60 },
+        today = { user = 2 },
+    },
+    echo = "{reply_good_night}"	--直接回复文本
 }
 ```
 
@@ -73,6 +83,19 @@ script目录中的lua文件名（不含后缀）可作为loadLua函数的参数�
 
 script中的文件不会被预加载，而是调用时实时读取，因此热更新后不需要使用`.system load`加载。
 
+```lua
+---reply_good_morning.lua
+clock_now = now = os.date("*t")
+if(now.hour>12)then
+    msg.hour = now.hour
+    return "{reply_good_morning_late}"
+elseif(now.hour<5)then
+    return "{reply_good_morning_early}"
+else
+    return "{reply_good_morning}"
+end
+```
+
 #### speech
 
 台词speech是自定义回执文本的上位，可直接由花括号转义。每项条目可存多条文本，等效于单抽放回的牌堆或{sample}。load时读入，修改后需要`system load`应用。
@@ -81,6 +104,11 @@ script中的文件不会被预加载，而是调用时实时读取，因此热�
 reply_good_morning:
  - "早上好啊{nick}"
  - "那{nick}也早安哦"
+reply_good_morning_late: "{hour}点的早安？{nick}起得可真早呢"
+reply_good_morning_early: "早安，{nick}的睡眠还够吗？"
+reply_good_night: 
+ - "晚安呐"
+ - "也祝{nick}晚安"
 strRollDice: "{pc}掷骰：{res}"
 strRollRegularSuccess: 
  - 成功了哦
