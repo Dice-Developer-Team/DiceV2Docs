@@ -13,7 +13,7 @@
 
 从零编写lua脚本需要对lua有一定的了解，**建议使用VS Code等工具编辑脚本**。如果实在脚本苦手，手册附录准备了现成的样例脚本，你也**可以在Shiki官方群或论坛内找到Shiki免费发布共享的脚本**。Shiki的桌游指令集已收录：DND检定、ShadowRun、双重十字、永夜后日谈（命中检定）、祸不单行、山屋惊魂。**如果你只要安装现成脚本，只需记住在存档目录下创建plugin文件夹，将lua文件放入后启动或.system load。**如果你实在有想实现的指令，没办法修改现成脚本实现，也确实找不到人白嫖的话，可以联系Shiki定制。愿所有人能从Dice!骰娘处获得更好的用户体验，拥有自己独一无二的骰娘。
 
-Shiki的开发官方群:【审判】754494359【死神】1029435374
+Shiki的开发官方群:【一群】928626681【二群】1029435374
 
 <div align="right">——安研色Shiki</div>
 
@@ -513,7 +513,7 @@ getUserToday(msg.fromQQ, "jrrp")
 
 ### getUserConf(userID, keyConf, defaultVal)
 
-取用户配置项
+取用户配置项，带*的配置项会另行计算而非调用存储数据
 
 ```lua
 getUserConf(msg.fromQQ, "好感度", 0)
@@ -524,6 +524,17 @@ getUserConf(msg.fromQQ, "好感度", 0)
 | 用户账号 | number   | 可以为纯数字的字符串           |
 | 配置项   | string   | 待取配置项                     |
 | 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+
+| 配置项      | 说明                                                  |
+| ----------- | ----------------------------------------------------- |
+| trust       | 用户信任；写入时最高设为4且无法对trust超过4的用户编辑 |
+| firstCreate       | 用户记录创建（初次使用）时间 [时间戳，秒] |
+| lastUpdate       | 用户记录最后更新时间 [时间戳，秒] |
+| name*       | 用户账号昵称（只读）                                  |
+| nick*       | 全局称呼（备取账号昵称）                   |
+| nick#`群号`* | 特定群内的称呼（备取群名片->全局称呼->账号昵称）                  |
+| nn* | 全局nn |
+| nn#`群号`* | 特定群内的nn |
 
 ### setUserConf(userID, keyConf, val)
 
@@ -537,7 +548,7 @@ getUserConf(msg.fromQQ, "好感度", 0)
 
 ### getGroupConf(groupID, keyConf, defaultVal)
 
-取群配置项
+取群配置项，带*的配置项会另行计算而非调用存储数据
 
 ```lua
 getGroupConf(msg.fromQQ, "rc房规", 0)
@@ -548,6 +559,17 @@ getGroupConf(msg.fromQQ, "rc房规", 0)
 | 群号     | number   | 可以为纯数字的字符串           |
 | 配置项   | string   | 待取配置项                     |
 | 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+
+| 配置项          | 说明                              |
+| --------------- | --------------------------------- |
+| name            | 群名称                            |
+| size*           | 群人数                            |
+| maxsize*        | 群人数上限                        |
+| firstCreate       | 群记录创建（初次使用）时间 [时间戳，秒] |
+| lastUpdate      |群记录最后更新时间 [时间戳，秒] |
+| card#`群员账号` | 群名片（只读）                    |
+| auth#`群员账号` | 群权限（只读） 1-群员;2-管理;3-群主                   |
+| lsd#`群员账号` | 最后发言时间（只读） [时间戳，秒]                    |
 
 ### setGroupConf(groupID, keyConf, val)
 
