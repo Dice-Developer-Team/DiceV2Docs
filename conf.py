@@ -19,13 +19,17 @@ from recommonmark.transform import AutoStructify
 
 # -- Project information -----------------------------------------------------
 
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
+source_suffix = ['.rst', '.md']
+
 project = 'Dice!'
-copyright = '2020-2021, Suhui & Shiki'
+copyright = '2020-2022, Suhui & Shiki'
 author = 'Suhui & Shiki'
 master_doc = 'index'
 
 # The full version, including alpha/beta/rc tags
-release = '2.6.0'
+release = '2.6.4-rc'
 
 
 # -- General configuration ---------------------------------------------------
@@ -33,7 +37,9 @@ release = '2.6.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["recommonmark"
+extensions = [
+    "recommonmark",
+    'myst_parser'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
