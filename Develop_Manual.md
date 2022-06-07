@@ -4,7 +4,7 @@
 
 ## 简介
 
-本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复所作的说明，**当前对应最新版本Dice!2.6.3(606)**。通过在plugin目录放入lua脚本，Dice!将以前缀匹配的形式监听特定消息并回复，基于admin clock处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
+本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复所作的说明，**当前对应最新版本Dice!2.6.4(612)**。通过在plugin目录放入lua脚本，Dice!将以前缀匹配的形式监听特定消息并回复，基于admin clock处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
 
 1. 过于客制化而无法使用现有数据结构表现的功能，如：基于D20结果的数值分段回复；
 2. 同人性质或版本各异的规则，如：JOJO团、圣杯团、方舟团等；
@@ -39,8 +39,26 @@ You should have received a copy of the GNU Affero General Public License along w
 
 ## Mod结构
 
-Mod采用类Paradox风格结构。主文件为Dice存档目录/mod中的json文件，写有mod的标题、作者、版本信息、说明文本等。Mod目录与主文件同名，其下子目录存放不同类型文件。
-
+Mod采用类Paradox风格结构，Dice存档目录/mod/下的json文件及其同名文件夹构成：`mod_name.json`写有mod的标题、作者、版本信息、说明文本等；同名`mod_name`目录下子目录存放不同类型文件。
+```
+[DiceData]/mod
+│   mod_name.json
+│
+└───mod_name
+    │
+    └───event
+    │   │   good_morning.lua
+    │
+    └───reply
+    │   │   good_morning.lua
+    │
+    └───script
+    │   │   event_good_morning.lua
+    │   │   reply_good_morning.lua
+    │
+    └───speech
+        │   global_msg.yaml
+```
 ### Mod子目录
 
 #### event
@@ -398,7 +416,7 @@ Dice!在当日时间（时:分）达到预设的时点，会触发定时任务�
 
 ### 任务函数
 
-任务函数没有输出参数，返回值也没有意义。定时任务可以用于某些扩展功能定时发送消息或每日重置状态~~，如重置自己的发情状态和淫乱度~~。
+任务函数没有输出参数，返回值也没有意义。定时任务可以用于某些扩展功能定时发送消息或每日重置状态。
 
 ### 任务注册
 
@@ -440,11 +458,10 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 ### log(info[,notice_level])
 
 发送日志
-
-| 传入参数     | 变量类型 | 说明                             |
-| ------------ | -------- | -------------------------------- |
-| 日志内容     | string   | 待输出日志内容                   |
-| 通知窗口级别 | number   | 选填，若空则只输出到框架日志界面 |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>日志内容</td><td>string</td><td>待输出日志内容</td></tr>
+<tr><td>通知窗口级别</td><td>number</td><td>选填，若空则只输出到框架日志界面</td></tr>
+</tbody></table>
 
 ### loadLua(scriptName)
 
@@ -455,43 +472,36 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 ```lua
 loadLua("PC/COC7")
 ```
-
-| 传入参数  | 变量类型 | 说明                               |
-| --------- | -------- | ---------------------------------- |
-| lua文件名 | string   | 待调用mod/script/文件或plugin/文件 |
-
-| 返回值类型         | 说明                   |
-| ------------------ | ---------------------- |
-| 同文件内返回值类型 | 执行指定文件后的返回值 |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>lua文件名</td><td>string</td><td>待调用mod/script/文件或plugin/文件</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>同文件内返回值类型</td><td>执行指定文件后的返回值</td></tr>
+</tbody></table>
 
 ### ranint(low,high)
 
 取随机数
-
-| 传入参数     | 变量类型 | 说明 |
-| ------------ | -------- | ---- |
-| 随机区间下限 | number   | 整数 |
-| 随机区间上限 | number   | 整数 |
-
-| 返回值类型 | 说明       |
-| ---------- | ---------- |
-| number     | 生成随机数 |
-
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>随机区间下限</td><td>number</td><td>整数</td></tr>
+<tr><td>随机区间上限</td><td>number</td><td>整数</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>number</td><td>生成随机数</td></tr>
+</tbody></table>
 ### getDiceQQ()
 
 取Dice账号
-
-| 返回值类型 | 说明           |
-| ---------- | -------------- |
-| string     | 取骰子自身账号 |
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>string</td><td>取骰子自身账号</td></tr>
+</tbody></table>
 
 ### getDiceDir()
 
 取Dice存档目录，用于自行读写文件
-
-| 返回值类型 | 说明           |
-| ---------- | -------------- |
-| string     | 取Dice存档目录 |
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>string</td><td>取Dice存档目录</td></tr>
+</tbody></table>
 
 ### eventMsg(msg, fromGroup, fromUser)
 
@@ -500,26 +510,25 @@ loadLua("PC/COC7")
 ```lua
 eventMsg(".rc Rider Kick:70 踢西鹿", msg.fromGroup, msg.fromQQ)
 ```
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>消息文本</td><td>string</td><td></td></tr>
+<tr><td>来源群</td><td>number</td><td>可以为空</td></tr>
+<tr><td>发送者</td><td>number</td><td></td></tr>
+</tbody></table>
 
-| 输入参数 | 变量类型 | 说明                 |
-| -------- | -------- | -------------------- |
-| 消息文本 | string   |                      |
-| 来源群   | number   | 可以为纯数字的字符串 |
-| 发送者   | number   | 可以为纯数字的字符串 |
+### sendMsg发送消息
 
-### sendMsg(msg, fromGroup, fromUser)
-
-发送一条消息。
+可使用参数列表`sendMsg(msg, gid, uid)`或参数包形式`sendMsg(pkg)`发送
 
 ```lua
 sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
 ```
-
-| 输入参数 | 变量类型 | 说明                 |
-| -------- | -------- | -------------------- |
-| 消息文本 | string   |                      |
-| 目标群   | number   | 0视为私聊            |
-| 目标用户 | number   | 可以为纯数字的字符串 |
+<table><thead><tr><th>输入参数/pkg子项</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>fwdMsg</td><td>string</td><td>待发送消息</td></tr>
+<tr><td>gid</td><td>number</td><td>私聊时为空</td></tr>
+<tr><td>uid</td><td>number</td><td>群聊时可以为空</td></tr>
+<tr><td>chid</td><td>number</td><td>频道id，仅参数包可用</td></tr>
+</tbody></table>
 
 ### getUserToday(userID, keyConf, defaultVal)
 
@@ -528,22 +537,24 @@ sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
 ```lua
 getUserToday(msg.uid, "jrrp")
 ```
-
-| 输入参数 | 变量类型 | 说明                           |
-| -------- | -------- | ------------------------------ |
-| 用户账号 | number   | 可以为纯数字的字符串           |
-| 配置项   | string   | 待取配置项                     |
-| 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>number</td><td></td></tr>
+<tr><td>配置项</td><td>string</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值，为空则返回0</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
 
 ### setUserToday(userID, keyConf, val)
 
 存用户今日数据项
 
-| 输入参数 | 变量类型 | 说明                 |
-| -------- | -------- | -------------------- |
-| 用户账号 | number   | 可以为纯数字的字符串 |
-| 配置项   | string   | 待存配置项           |
-| 配置值   | 任意     | 待存值               |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>number</td><td></td></tr>
+<tr><td>配置项</td><td>string</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
 
 ### getUserConf(userID, keyConf, defaultVal)
 
@@ -552,33 +563,35 @@ getUserToday(msg.uid, "jrrp")
 ```lua
 getUserConf(msg.fromQQ, "好感度", 0)
 ```
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>number</td><td></td></tr>
+<tr><td>配置项</td><td>string</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
 
-| 输入参数 | 变量类型 | 说明                           |
-| -------- | -------- | ------------------------------ |
-| 用户账号 | number   | 可以为纯数字的字符串           |
-| 配置项   | string   | 待取配置项                     |
-| 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+<table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
+<tr><td>trust</td><td>用户信任（仅4以下可编辑）</td></tr>
+<tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
+<tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
+<tr><td>name*</td><td>用户账号昵称（只读）</td></tr>
+<tr><td>nick*</td><td>全局称呼（备取账号昵称）</td></tr>
+<tr><td>nick#`群号`*</td><td>特定群内的称呼（备取群名片->全局称呼->账号昵称）</td></tr>
+<tr><td>nn*</td><td>全局nn</td></tr>
+<tr><td>nn#`群号`*</td><td>特定群内的nn</td></tr>
+</tbody></table>
 
-| 配置项      | 说明                                                  |
-| ----------- | ----------------------------------------------------- |
-| trust       | 用户信任；写入时最高设为4且无法对trust超过4的用户编辑 |
-| firstCreate       | 用户记录创建（初次使用）时间 [时间戳，秒] |
-| lastUpdate       | 用户记录最后更新时间 [时间戳，秒] |
-| name*       | 用户账号昵称（只读）                                  |
-| nick*       | 全局称呼（备取账号昵称）                   |
-| nick#`群号`* | 特定群内的称呼（备取群名片->全局称呼->账号昵称）                  |
-| nn* | 全局nn |
-| nn#`群号`* | 特定群内的nn |
 
 ### setUserConf(userID, keyConf, val)
 
 存用户配置项
-
-| 输入参数 | 变量类型 | 说明                 |
-| -------- | -------- | -------------------- |
-| 用户账号 | number   | 可以为纯数字的字符串 |
-| 配置项   | string   | 待存配置项           |
-| 配置值   | 任意     | 待存值               |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>number</td><td></td></tr>
+<tr><td>配置项</td><td>string</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
 
 ### getGroupConf(groupID, keyConf, defaultVal)
 
@@ -587,42 +600,42 @@ getUserConf(msg.fromQQ, "好感度", 0)
 ```lua
 getGroupConf(msg.fromQQ, "rc房规", 0)
 ```
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>群号</td><td>number</td><td></td></tr>
+<tr><td>配置项</td><td>string</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
 
-| 输入参数 | 变量类型 | 说明                           |
-| -------- | -------- | ------------------------------ |
-| 群号     | number   | 可以为纯数字的字符串           |
-| 配置项   | string   | 待取配置项                     |
-| 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
-
-| 配置项          | 说明                              |
-| --------------- | --------------------------------- |
-| name            | 群名称                            |
-| size*           | 群人数                            |
-| maxsize*        | 群人数上限                        |
-| firstCreate       | 群记录创建（初次使用）时间 [时间戳，秒] |
-| lastUpdate      |群记录最后更新时间 [时间戳，秒] |
-| card#`群员账号`* | 群名片（只读）                    |
-| auth#`群员账号`* | 群权限（只读） 1-群员;2-管理;3-群主                   |
-| lsd#`群员账号`* | 最后发言时间（只读） [时间戳，秒]                    |
+<table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
+<tr><td>name*</td><td>群名称（只读）</td></tr>
+<tr><td>size*</td><td>群人数（只读）</td></tr>
+<tr><td>maxsize*</td><td>群规模（只读）</td></tr>
+<tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
+<tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
+<tr><td>card#`群员账号`*</td><td>群名片</td></tr>
+<tr><td>auth#`群员账号`*</td><td>群权限（只读） 1-群员;2-管理;3-群主</td></tr>
+<tr><td>lst#`群员账号`*</td><td>最后发言时间（只读） [时间戳，秒]</td></tr>
+</tbody></table>
 
 ### setGroupConf(groupID, keyConf, val)
 
 存群配置项
-
-| 输入参数 | 变量类型 | 说明                 |
-| -------- | -------- | -------------------- |
-| 群号     | number   | 可以为纯数字的字符串 |
-| 配置项   | string   | 待存配置项           |
-| 配置值   | 任意     | 待存值               |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>群号</td><td>number</td><td></td></tr>
+<tr><td>配置项</td><td>string</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
 
 ### getPlayerCard(userID, groupID)
 
-取角色卡（整张）
-
-| 输入参数 | 变量类型 | 说明                           |
-| -------- | -------- | ------------------------------ |
-| 用户账号 | number   | 可以为纯数字的字符串           |
-| 群号     | number   | 可以为纯数字的字符串           |
+取指定群内绑定的角色卡（整张）
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>number</td><td></td></tr>
+<tr><td>群号</td><td>string</td><td>为空或未绑定则取默认卡</td></tr>
+</tbody></table>
 
 ### getPlayerCardAttr(userID, groupID, keyAttr, defaultVal)
 
@@ -631,24 +644,24 @@ getGroupConf(msg.fromQQ, "rc房规", 0)
 ```lua
 getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
 ```
-
-| 输入参数 | 变量类型 | 说明                           |
-| -------- | -------- | ------------------------------ |
-| 用户账号 | number   | 可以为纯数字的字符串           |
-| 群号 | number   | 可以为纯数字的字符串           |
-| 属性   | string   | 待取属性                     |
-| 默认值   | 任意     | 可为空，配置项不存在时返回该值 |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>number</td><td></td></tr>
+<tr><td>群号</td><td>number</td><td></td></tr>
+<tr><td>属性名</td><td>string</td><td>待取属性</td></tr>
+<tr><td>候补值</td><td>任意</td><td>属性不存在时返回该值</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>任意</td><td>待取属性</td></tr>
 
 ### setPlayerCardAttr(userID, groupID, keyConf, val)
 
 存角色卡属性
-
-| 输入参数 | 变量类型 | 说明                 |
-| -------- | -------- | -------------------- |
-| 用户账号 | number   | 可以为纯数字的字符串 |
-| 群号 | number   | 可以为纯数字的字符串 |
-| 属性   | string   | 待存属性           |
-| 属性值   | 任意     | 待存值               |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>number</td><td></td></tr>
+<tr><td>群号</td><td>number</td><td></td></tr>
+<tr><td>属性名</td><td>string</td><td>待存属性</td></tr>
+<tr><td>属性值</td><td>任意</td><td>待存数据</td></tr>
+</tbody></table>
 
 ### drawDeck(deckName, groupID, userID)
 
@@ -657,32 +670,29 @@ getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
 ```lua
 drawDeck("俄罗斯轮盘", msg.fromGroup, msg.fromQQ)
 ```
-
-| 输入参数 | 变量类型 | 说明                 |
-| -------- | -------- | -------------------- |
-| 牌堆名   | string   | 优先抽取牌堆实例     |
-| 群号     | number   | 可以为纯数字的字符串 |
-| 用户账号 | number   | 可以为纯数字的字符串 |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>牌堆名</td><td>string</td><td>优先抽取牌堆实例</td></tr>
+<tr><td>群号</td><td>number</td><td>可以为空</td></tr>
+<tr><td>用户账号</td><td>number</td><td>可以为空</td></tr>
+</tbody></table>
 
 ### mkDirs(pathDir)
 
-| 输入参数   | 变量类型 | 说明             |
-| ---------- | -------- | ---------------- |
-| 文件夹路径 | string   | 递归创建该文件夹 |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>文件夹路径</td><td>string</td><td>递归创建该文件夹</td></tr>
+</tbody></table>
 
 ### sleepTime(ms)
-
-| 输入参数   | 变量类型 | 说明 |
-| ---------- | -------- | ---- |
-| 等待毫秒数 | number   |      |
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>等待毫秒数</td><td>number</td><td></td></tr>
+</tbody></table>
 
 ### msg:echo(replyMsg)
 
-回复消息
-
-| 输入参数   | 变量类型 | 说明 |
-| ---------- | -------- | ---- |
-| 待回复消息 | string   |      |
+回复消息，有来源聊天窗口的事件也可以用`event:echo(replyMsg)`
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>待回复消息</td><td>string</td><td></td></tr>
+</tbody></table>
 
 ## 附录：自定义指令常用的正则匹配
 
@@ -726,7 +736,7 @@ attempt to index a nil value (global '%s')
 attempt to concatenate a nil value (local '%s')
 -- 使用..连接字符串时连接了一个空变量%s
 bad argument #1 to '%s' (string expected, got nil)
--- 函数%s的第1个参数类型错误，要求类型为string，但实际传入的参数为nil。特别地，got nil表示传入参数为nil或缺少参数
+-- 函数%s的第1个参数类型错误，要求类型为string，但实际传入的参数为nil。特别地，got nil表示输入参数为nil或缺少参数
 value expected
 -- 要求参数，但没有传入
 attempt to perform arithmetic on a nil value (global '%s')
