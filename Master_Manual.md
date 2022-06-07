@@ -1,8 +1,8 @@
 # Dice! Master手册
 
-手册更新时间：20220316
+手册更新时间：20220607
 
-*这是Dice!于2022.3.16更新2.6.3fixed(606)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
+*这是Dice!于2022.6.6更新2.6.4rc(612)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
 用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
 更多内容可参看[Dice!论坛](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
@@ -17,7 +17,7 @@
 
 ### 目录
 
-- [更新说明](#更新说明2.6.0)
+- [更新说明](#更新说明2.6.4)
   - [从2.5.0+版本升级](#从2.5.0+版本升级)
   - [从低版本升级到2.5.0+](#从低版本升级到2.5.0+)
 - [框架说明](#QQ框架Dice!2.5.0+)
@@ -40,7 +40,16 @@
 - [更新历史](#更新历史)
 - [后记](#后记)
 
-### 更新说明(2.6.3)
+### 更新说明2.6.4
+
+- WebUI优化回执跨行编辑，同步reply的触发词多对一
+- 新增`.mod on/off/list`指令
+- mod新增event子目录，支持循环`cycle`/定时`clock`/代理`hook`类型事件
+- 更新log指令，允许自定义log名
+- 更新ob指令
+- 新增`.link state/list`
+
+#### 更新说明(2.6.3)
 
 - 新增DisableStrangerChat禁用非好友私聊
 - lua允许向msg读写成员，支持`msg:echo`方法
