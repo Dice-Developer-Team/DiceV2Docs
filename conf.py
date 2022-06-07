@@ -28,6 +28,7 @@ copyright = '2020-2022, Suhui & Shiki'
 author = 'Suhui & Shiki'
 master_doc = 'index'
 
+version = '2.6.4'
 # The full version, including alpha/beta/rc tags
 release = '2.6.4-rc'
 
@@ -38,8 +39,7 @@ release = '2.6.4-rc'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "recommonmark",
-    'myst_parser'
+    "recommonmark"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
