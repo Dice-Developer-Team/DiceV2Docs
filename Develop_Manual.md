@@ -41,23 +41,22 @@ You should have received a copy of the GNU Affero General Public License along w
 
 Mod采用类Paradox风格结构，Dice存档目录/mod/下的json文件及其同名文件夹构成：`mod_name.json`写有mod的标题、作者、版本信息、说明文本等；同名`mod_name`目录下子目录存放不同类型文件。
 ```
-[DiceData]/mod
-│   mod_name.json
-│
-└───mod_name
-    │
-    └───event
-    │   │   good_morning.lua
-    │
-    └───reply
-    │   │   good_morning.lua
-    │
-    └───script
-    │   │   event_good_morning.lua
-    │   │   reply_good_morning.lua
-    │
-    └───speech
-        │   global_msg.yaml
+[DiceData]
+|-- mod
+    |-- mod_name.json
+    |-- mod_name
+        |-- event
+        |   |-- good_morning.lua
+        |
+        |-- reply
+        |   |-- good_morning.lua
+        |
+        |-- script
+        |   |-- event_good_morning.lua
+        |   |-- reply_good_morning.lua
+        |
+        |-- speech
+            |-- rlobal_msg.yaml
 ```
 ### Mod子目录
 
@@ -769,7 +768,40 @@ invalid option '%s'
 
 - json: [在线JSON校验格式化工具](https://www.bejson.com/)
 - yaml: [YAML、YML在线编辑器(格式化校验)](https://www.bejson.com/validators/yaml_editor/)
-- lua: [在线运行Lua (bejso](https://www.bejson.com/runcode/lua/)
+- lua: [在线运行Lua ](https://www.bejson.com/runcode/lua/)
+
+## 附录：事件event样例
+
+### 代理事件
+
+```lua
+--event/hook.lua
+event.listen_friend_request = {
+    title = "好友申请处理",
+    trigger = {
+        hook = "FriendRequest"
+    },
+    action = { lua = "listen_friend_request" } 
+}
+```
+
+#### 代理好友申请
+
+```lua
+--script/listen_friend_requst.lua
+answer = event.fromMsg
+--如果验证方式为回答问题，则需要截去问题部分
+-answer = string.sub(answer,string.find(answer,"答案：")+#"答案：")
+true_answer = "正确回案"
+if string.find(answer,"true_answer") then
+    log("收到"..getUserConf(event.fromUser,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答通过√",1)
+    event.approval = true --通过申请
+else
+    log("收到"..getUserConf(event.fromUser,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答错误×",1)
+    event.approval = false
+end
+event.blocked = true --终止连锁，不执行原生申请处理流程
+```
 
 ## 附录：DND规则.rdc指令
 
