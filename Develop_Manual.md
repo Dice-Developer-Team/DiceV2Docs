@@ -58,6 +58,30 @@ Mod采用类Paradox风格结构，Dice存档目录/mod/下的json文件及其同
         |-- speech
             |-- rlobal_msg.yaml
 ```
+### Mod主文件
+
+```json
+{
+    "mod":"角色卡栏位扩展",
+    "ver":"1.0.0",
+    "author":"安研色Shiki",
+    "dice_build":606,
+    "brief":"角色卡栏位扩展（状态栏、物品栏、法术栏、专长栏、笔记栏等）",
+    "comment":"",
+    "helpdoc":{
+        "mod":"模块名称",
+        "ver":"mod版本号",
+    	"author":"作者署名",
+        "dice_build":"支持mod运行的最低Dice!版本号，低于此项的Dice!将放弃读取该mod",
+    	"brief":"会在Dice!中展示的模块简介",
+    	"comment":"不会写入，仅用作文件内的注释项",
+        "helpdoc":"帮助文档，其中的项目可被.help获取"
+    }
+}
+```
+
+mod主文件读取成功后，Dice!将尝试进一步读取同名子目录。
+
 ### Mod子目录
 
 #### event
@@ -783,6 +807,13 @@ event.listen_friend_request = {
     },
     action = { lua = "listen_friend_request" } 
 }
+event.listen_friend_add = {
+    title = "好友添加事件",
+    trigger = {
+        hook = "FriendAdd" --主动通过好友申请时不触发
+    },
+    action = { lua = "listen_friend_add" } 
+}
 ```
 
 #### 代理好友申请
@@ -802,6 +833,41 @@ else
 end
 event.blocked = true --终止连锁，不执行原生申请处理流程
 ```
+#### 代理新增好友
+
+```lua
+--script/listen_friend_add.lua
+answer = event.fromMsg
+--如果验证方式为回答问题，则需要截去问题部分
+-answer = string.sub(answer,string.find(answer,"答案：")+#"答案：")
+true_answer = "正确回案"
+if string.find(answer,"true_answer") then
+    log("收到"..getUserConf(event.fromUser,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答通过√",1)
+    event.approval = true --通过申请
+else
+    log("收到"..getUserConf(event.fromUser,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答错误×",1)
+    event.approval = false
+end
+event.blocked = true --终止连锁，不执行原生申请处理流程
+```
+#### 代理公骰审核
+
+```lua
+--script/listen_group_authorize.lua
+answer = event.attachText
+--如果验证方式为回答问题，则需要截去问题部分
+-answer = string.sub(answer,string.find(answer,"答案：")+#"答案：")
+true_answer = "正确回案"
+if string.find(answer,"true_answer") then
+    log("收到"..getUserConf(event.fromUser,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答通过√",1)
+    event.approval = true --通过申请
+else
+    log("收到"..getUserConf(event.fromUser,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答错误×",1)
+    event.approval = false
+end
+event.blocked = true --终止连锁，不执行原生申请处理流程
+```
+
 
 ## 附录：DND规则.rdc指令
 
