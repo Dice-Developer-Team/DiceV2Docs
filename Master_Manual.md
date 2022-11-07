@@ -2,7 +2,7 @@
 
 手册更新时间：20220607
 
-*这是Dice!于2022.6.6更新2.6.4rc(612)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
+*这是Dice!于2022.10.29更新2.6.5rc(629)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
 用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
 更多内容可参看[Dice!论坛](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
@@ -40,7 +40,20 @@
 - [更新历史](#更新历史)
 - [后记](#后记)
 
-### 更新说明2.6.4
+### 更新说明(2.6.5)
+
+- 重写认主机制
+- 恢复cloud update远程更新
+- reply新增限制lock项，与msg_order合并
+- 优化消息转义，支持case、grade条件输出，支持welcome有限转义
+- 留档每日数据至/user/daily/
+- 优化mod on/off热插拔，支持mod get安装/info信息/detail详细信息/delete卸载/reload重载/update更新/reinstall重装
+- mod新增image与audio子目录
+- 支持TimeZoneLag项手动调整时差
+- 新增各项lua交互特性，新增函数getSelfData,msg:format等
+- json等数据结构采用fifo特性
+
+#### 2.6.4
 
 - WebUI优化回执跨行编辑，同步reply的触发词多对一
 - 新增`.mod on/off/list`指令
@@ -49,7 +62,7 @@
 - 更新ob指令
 - 新增`.link state/list`
 
-#### 更新说明(2.6.3)
+#### 2.6.3
 
 - 新增DisableStrangerChat禁用非好友私聊
 - lua允许向msg读写成员，支持`msg:echo`方法
@@ -60,7 +73,7 @@
 - 修复.sc使用给定理智值时，剩余理智存入角色卡的bug
 - 修复[敏感词检测](#自定义敏感词库(.admin censor))时点（点号开头、指令、回复、被at时）
 
-#### 更新说明(2.6.2)
+#### 2.6.2
 
 - 可使用[.str reset](#自定义回执文本(.str))指令重置过时的文本而无需重启了
 - reply新增[触发限制条件](#触发条件)，`reply set`时可加入Limit字段
@@ -73,7 +86,7 @@
 - 允许设置全局默认rc房规
 - 允许lua修改5级以下信任
 
-#### 更新说明(2.6.1)
+#### 2.6.1
 
 - lua新增http.get/http.post等函数
 - 对lua优化require路径，现在require可以读取Diceki/lua/文件夹下的lua或dll了
@@ -83,42 +96,12 @@
 - 新增.ak指令
 - WebUI提供reply跨行编辑按钮
 
-#### 更新说明(2.6.0)
+#### 2.6.0
 
 - ww指令机制优化
 - 支持[reply](#自定义回复(.reply))使用多种触发模式与回复模式
 - 可使用[WebUI](#WebUI配置面板)进行远程图形化配置，原设置插件/综合管理重定向至WebUI
 - .pc stat角色卡掷骰统计
-
-#### 更新说明(2.5.2)
-
-- 支持[自定义文本](#自定义文本转义)使用sample转义多选一
-- [自动清理过期用户数据](#过期数据自动清理(.admin InactiveUserLine/InactiveGroupLine=360))（默认360天）
-- 高频指令通知将显示最后一次指令的内容
-- 增加入群后对[同系Dice!的识别](#本系骰识别)
-- 降低jrrp失败向后台报错的频率
-- 修复单次清群上限无作用的bug
-- 修复st格式错误导致CPU100%的恶性bug
-- 修复了一些其他bug
-
-#### 更新说明(2.5.1)
-
-- 优化{pc}丢失、群昵称获取失败等问题
-- 扩展通知窗口级别，允许.send notice
-- 允许自定义定时任务
-- 优化lua跨平台编码问题
-- lua预设函数新增到18个
-
-#### 更新说明(2.5.0)
-
-- 允许安装lua脚本指令
-- 本体独立于框架，必须由Dice驱动器装载
-- 使用`.admin ListenSelfEcho/ListenGroupEcho`自定义是否接收自己的私聊/群聊消息
-- 补充了对自身的指令频度监控，避免自我响应
-- 使用`.admin GroupInvalidSize`自定义协议无效的群规模
-- 开启对同系Dice的识别
-- 缓存今日人品，允许lua调用
-- 默认自动保存间隔调整为5分钟
 
 ### QQ框架(Dice!2.5.0+)
 
@@ -143,7 +126,6 @@ MiraiAndroid是当前不使用模拟器在**手机挂载Dice**的唯一选择，
   6. 无法获取未加入群的群信息
   7. **支持Windows, Linux, MacOS, Android**, iOS(停更中)
   8. 不依赖中心服务器，**不存在框架后台服务器跑路或连接失败**
-
 - MyQQ：
   1. 由于程序不支持附加调试，存在未排除的异常风险
   2. 固定PC设备登录，协议可以选PC版QQ或者PC版TIM等
@@ -158,27 +140,22 @@ MiraiAndroid是当前不使用模拟器在**手机挂载Dice**的唯一选择，
   5. 接收好友申请时无法获取验证信息
   6. 因为程序缺陷，会出现连接服务器失败、“与服务器北京时间相差超过1秒”等问题
   7. 能接收频道消息，但发送频道消息疑似需要申请官方接口
-- OnoQQ-Air（免费版）：
-  1. 作为单Q阉割版存在登录重复弹窗等缺陷
-  2. 固定PC设备登录
-  3. 不能多开QQ，支持扫码登录
 - go-cqhttp：
-  1. **最高的账号或风控概率**
   2. 支持手Q/平板/手表登录
   3. 不能多开QQ，但DiceDriver支持一键启动多个go-cqhttp.exe
   4. 支持扫码登录
 
 #### 框架目录结构
 
-**Mirai目录**![](_static/intro_mirai2_dir.png)
+##### Mirai目录![](_static/intro_mirai2_dir.png)
 
 非Windows系统可能目录稍微不一致，但文档中提到的应该适用于任何操作系统。Android版目录位置为内部存储空间/Android/data/io.github.mzdluo123.mirai.android/files/
 
 #### 2.5.0+版本升级
 
-- 先驱版本: 需要将更新版的w4123.Dice.dll放入Diceki文件夹替换旧文件，并重载DiceDriver插件；如果DiceDriver同时有新版则必须同步更新
 - Mirai版本：执行Update.sh/更新.cmd
 - MiraiAndroid: 安装新版APK
+- 其他版本: 需要将更新版的w4123.Dice.dll放入Diceki文件夹替换旧文件，并重载DiceDriver插件；如果DiceDriver同时有新版则必须同步更新
 - 请关注论坛以获得具体版本的更新方法
 
 #### 从低版本升级到2.5.0+
@@ -247,17 +224,11 @@ WebUI 使用 HTTP Digest验证，密码保存为Digest，理论上比较安全�
 
 ![图形界面2](_static/demo_gui_page2.png)
 
-### Master模式
+### 骰主(Master)
 
-Master是骰娘的控制者，每个骰娘同时至多只能有一个Master。Master可以控制骰娘的发言和行为，并个性化大量配置。受信任用户也可以获得对骰娘的部分权限，但只有Master拥有发放和回收高级权限的权限。
+Master是骰娘的控制者，每个骰娘同时至多只能有一个Master。Master可以控制骰娘的发言和行为，并进行大量**个性化配置**，也**对骰娘行为负责**。受信任用户也可以获得对骰娘的部分权限，但只有Master拥有发放和回收高级权限的权限。
 
-Master功能初始默认关闭，你可以在WebUI/GUI管理面板完成认主（推荐，WebUI支持全平台）。对于Mirai纯命令行环境，如果无法访问WebUI及GUI，需要在Mirai命令行发送`npm menu <ID> eventMasterMode`（无其他插件时ID一般为0，指令即为`npm menu 0 eventMasterMode`）。
-
-#### Master绑定/解绑
-
-Master模式初次开启后为无主状态，此时对骰娘QQ发送`.master (private/public)` 将绑定发送者QQ为Master。也可直接在管理面板设置Master。认主时将自动开启全类型通知窗口，**建议将部分通知特别是通知窗口0转移到专门的小群**。<br>
-`.master (private)` 默认**私骰作成**，将自动开启私用模式<br>
-`.master public` **公骰作成**，将骰娘初始化为公骰，自动调整相应的配置<br>
+新生骰娘默认为无主状态，你可以在WebUI/GUI管理面板完成认主（推荐，WebUI支持全平台）或在聊天栏输入口令认主。无主骰娘在启动时将**向自身账号及框架日志窗口输出认主口令**，在聊天栏中对骰娘发送对应口令将绑定发送者账号为Master。也可直接在管理面板设置Master。认主时将自动开启全类型通知窗口，**建议将部分通知特别是通知窗口0转移到专门的小群**。<br>
 `.master delete` 解除绑定，骰娘此时会重回无主状态，清空通知窗口，但先前设定的配置不会初始化。<br>
 `.master reset [新masterQQ]` 解除绑定，骰娘此时会认主[新masterQQ]（原Master保留信任级别）<br>
 `.master admin`添加管理时自动将私聊添加为监视窗口，管理可以用`.admin delete`放弃权限，清除窗口可以私聊`.admin notice - me`
@@ -547,21 +518,29 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 
 回复文本中可以通过特定的{}标记转义文本，当前花括号支持嵌套。
 
-指令回复中对用户（消息来源QQ）的通用转义如下：
+指令回复中对用户（消息来源）的通用转义如下：
 
-- `{at}`-at用户QQ。
 - `{nick}`-取用户昵称，优先级为群内nn>全局nn>群名片>QQ昵称。
 - `{pc}`-取用户角色名，未录入角色卡则同{nick}。
 
 部分转义方法：
 
+- `{at:目标用户}`-at用户，省略参数则at消息对象。
 - `{help:条目名}`-获取帮助文档指定条目。
 - `{sample:分项1|分项2(...|分项n)}`-从所有分项中随机均匀抽取一项插入文本。例：` {sample:效果拔群|干得漂亮}`
-- `{vary:uid?账号1=1号专属文本&账号2=2号专属文本&else=通用文本}`-根据消息来源差分回复
+- `{case:uid?账号1=1号专属文本&账号2=2号专属文本&else=通用文本}`-根据消息语境中的变量分条件回复
+- `{grade:user.favor?0=用户&100=亲爱的&else=讨厌鬼}`-根据消息语境中的变量分档位回复
 
 #### 扩展模块mod
 
-扩展模块放入[DiceData]/mod/读取，可加载自定义回执、自定义回复与帮助词条，详见开发手册。
+扩展模块放入[DiceData]/mod/读取，可加载自定义回执、自定义回复与帮助词条，详见[开发手册](https://v2docs.kokona.tech/zh/latest/Develop_Manual.html)。mod按序读取，且从后向前覆盖。
+
+`.mod list` 查看已加载mod列表
+`.mod on 模块名` 启用指定模块
+`.mod off 模块名` 停用指定模块
+`.mod info 模块名` 指定模块简介信息
+`.mod detail 模块名` 指定模块详细信息
+`.mod delete 模块名` 卸载指定模块
 
 #### 扩展指令
 
@@ -733,6 +712,7 @@ sb
 #### 登录失败
 
 - Mirai显示**当前版本过低**：平板QQ(HD)已停止更新，该协议下各类登录失败原因都会写作“当前版本过低”，实际原因可能是账号登录被tx判定有风险，可以选择更换Mirai的登录协议。 
+- 骰娘账号手机登录时，在同一wifi下登录框架有更高成功率。若如此且框架为mirai或gocq，可在登录成功后将device.json文件迁移至用于稳定运行的网络环境。
 
 框架登录通过的成功率：**扫码登录>短信验证登录>无验证登录**
 
@@ -861,6 +841,36 @@ sb
 
 
 ## 更新历史
+
+#### 更新说明(2.5.2)
+
+- 支持[自定义文本](#自定义文本转义)使用sample转义多选一
+- [自动清理过期用户数据](#过期数据自动清理(.admin InactiveUserLine/InactiveGroupLine=360))（默认360天）
+- 高频指令通知将显示最后一次指令的内容
+- 增加入群后对[同系Dice!的识别](#本系骰识别)
+- 降低jrrp失败向后台报错的频率
+- 修复单次清群上限无作用的bug
+- 修复st格式错误导致CPU100%的恶性bug
+- 修复了一些其他bug
+
+#### 更新说明(2.5.1)
+
+- 优化{pc}丢失、群昵称获取失败等问题
+- 扩展通知窗口级别，允许.send notice
+- 允许自定义定时任务
+- 优化lua跨平台编码问题
+- lua预设函数新增到18个
+
+#### 更新说明(2.5.0)
+
+- 允许安装lua脚本指令
+- 本体独立于框架，必须由Dice驱动器装载
+- 使用`.admin ListenSelfEcho/ListenGroupEcho`自定义是否接收自己的私聊/群聊消息
+- 补充了对自身的指令频度监控，避免自我响应
+- 使用`.admin GroupInvalidSize`自定义协议无效的群规模
+- 开启对同系Dice的识别
+- 缓存今日人品，允许lua调用
+- 默认自动保存间隔调整为5分钟
 
 ### 更新说明(2.4.1)
 

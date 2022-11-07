@@ -86,7 +86,7 @@ mod主文件读取成功后，Dice!将尝试进一步读取同名子目录。
 
 #### event
 
-以lua形式向表event写入关键词回复。load时读入，修改后需要`system load`应用。
+以lua形式向表event写入事件。load时读入，修改后需要`system load`应用。
 
 ```lua
 event.listen_friend_request = { --该事件的ID，唯一对应，同名覆盖
@@ -154,7 +154,7 @@ msg_reply.good_night = {
 
 #### script
 
-script目录中的lua文件名（不含后缀）可作为loadLua函数的参数，也可直接作为关键词回复Lua形式的回复内容。
+script目录中的lua文件名（不含后缀）可作为loadLua函数的参数，也可直接作为关键词回复Lua形式的回复内容。*推荐script文件名及文件内不出现中文字符。*
 
 script中的文件不会被预加载，而是调用时实时读取，因此热更新后不需要使用`.system load`加载。
 
@@ -786,6 +786,8 @@ no visible label '%s' for <goto> at line
 -- 在循环结构中跳转不存在的节点
 invalid option '%s'
 -- 传入的参数不是string或不在给定的字符串列表中
+malformed number near '86400..'
+-- 数字与字符连接符粘连导致误判为小数点，使得格式解析错误，需要插入空格
 ```
 
 ## 附录：常用语法在线校验器
@@ -798,8 +800,40 @@ invalid option '%s'
 
 ### 代理事件
 
+<table><thead><tr><th>时点</th><th>说明</th></tr></thead><tbody>
+    <tr><td>StartUp</td><td>启动完成后</td></tr>
+    <tr><td>FriendRequest</td><td>好友申请后，处理前</td></tr>
+    <tr><td>FriendAdd</td><td>自动或被同意添加好友后，回复前</td></tr>
+    <tr><td>GroupRequest</td><td>受群邀请后，处理前</td></tr>
+    <tr><td>GroupKicked</td><td>被踢出群后，拉黑前</td></tr>
+    <tr><td>GroupBanned</td><td>被禁言后，拉黑前</td></tr>
+    <tr><td>GroupAuthorize</td><td>群申请许可后，处理前</td></tr>
+    <tr><td>LogEnd</td><td>日志完成后，上传前</td></tr>
+    <tr><td>WhisperIgnored</td><td>私聊不识别为指令且未触发回复</td></tr>
+</tbody></table>
+*被踢出群不含解散，被禁言不含全群禁言*
+*GroupAuthorize、LogEnd、WhisperIgnored时点在消息处理时，对应Event为Message，其余事件Event为其自身*
+<table><thead><tr><th>event参数</th><th>说明</th></tr></thead><tbody>
+    <tr><td>uid</td><td>当事用户</td></tr>
+    <tr><td>gid</td><td>当事群</td></tr>
+    <tr><td>fromMsg</td><td>消息文本/好友申请文本</td></tr>
+    <tr><td>aimGroup</td><td>GroupAuthorize中待审核群</td></tr>
+    <tr><td>AttachInfo</td><td>GroupAuthorize中申请文本</td></tr>
+    <tr><td>log_file/log_path</td><td>LogEnd中日志文件名及路径</td></tr>
+    <tr><td>blocked</td><td>[回传]是否拦截该事件后续处理</td></tr>
+    <tr><td>approval</td><td>[回传]是否同意申请</td></tr>
+    <tr><td>ignored</td><td>[回传]是否忽略算入指令计数</td></tr>
+</tbody></table>
+
 ```lua
 --event/hook.lua
+event.listen_startup = {
+    title = "启动完成",
+    trigger = {
+        hook = "StartUp"
+    },
+    action = { lua = "listen_startup" } 
+}
 event.listen_friend_request = {
     title = "好友申请处理",
     trigger = {
