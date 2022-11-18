@@ -4,7 +4,7 @@
 
 ## 简介
 
-本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复所作的说明，**当前对应最新版本Dice!2.6.4(612)**。通过在plugin目录放入lua脚本，Dice!将以前缀匹配的形式监听特定消息并回复，基于admin clock处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
+本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复、Dice!2.6.4(build612)支持的事件处理等所作的说明，**当前对应最新版本Dice!2.6.5(630)**。通过在plugin目录放入lua脚本，Dice!将监听特定消息或事件并做出响应，基于时刻或循环处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
 
 1. 过于客制化而无法使用现有数据结构表现的功能，如：基于D20结果的数值分段回复；
 2. 同人性质或版本各异的规则，如：JOJO团、圣杯团、方舟团等；
@@ -190,7 +190,13 @@ strRollRegularSuccess:
  - "成功 看来{self}还是护佑着{nick}的"
 ```
 
+#### image
 
+图片文件夹，会在mod加载后复制到`/data/image`文件夹中用于在消息中发送。
+
+#### audio
+
+语音文件夹，会在mod加载后复制到`/data/record`文件夹中用于发送语音。
 
 ## Lua快速教程
 
@@ -391,7 +397,7 @@ Dice!在收到消息时，将先匹配基础指令(.authorize/.dismiss/.warning/
 
 ### 指令函数
 
-指令函数的参数msg为一个含3个元素的table，msg.fromMsg、msg.fromGroup、msg.fromQQ分别表示消息文本、来源群、来源QQ。
+指令函数的参数msg可看做一张记录消息语境的表（实际为Lua类型userdata，以Dice定义的Context为元表），msg.fromMsg、msg.fromGroup、msg.fromUser分别表示消息文本、来源群、来源QQ。
 
 指令函数的返回值可以有0到2个，如有，第一个返回值表示直接回复的语句，第二个返回值表示私聊回复的语句（用于暗骰/暗抽/暗检定，会同时发送给ob用户）。由于Dice!在发送消息时会将换页符'\f'视为消息分段发送，实际上可以通过一个返回值返回多段回复。
 
@@ -470,6 +476,7 @@ task_call[task_name] = "custom_task"	--value为字符串格式且与任务函数
 Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的lua文件，在读写字符串时将自动检测utf-8编码并转换。而出现以下情况时，编码并非二者皆可：
 
 - lua文件相互调用或读写其他文本文件，且字符串含有非ASCII字符时，**关联文件字符集应保持一致**；
+- lua文件中需要调用http函数时，**应当与目标网页的编码一致（基本是UTF8）**
 - lua文件使用require或os等以文件名为参数的函数，且路径含有非ASCII字符时，**必须使用GBK**；
 
 ## 附录：Dice!预置的lua函数
@@ -631,17 +638,19 @@ getGroupConf(msg.fromQQ, "rc房规", 0)
 <table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
 <tbody><tr><td>任意</td><td>待取值</td></tr>
 </tbody></table>
-
 <table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
 <tr><td>name*</td><td>群名称（只读）</td></tr>
 <tr><td>size*</td><td>群人数（只读）</td></tr>
 <tr><td>maxsize*</td><td>群规模（只读）</td></tr>
 <tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
 <tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
+<tr><td>members</td><td>群用户列表</td></tr>
+<tr><td>admins</td><td>群管理列表</td></tr>
 <tr><td>card#`群员账号`*</td><td>群名片</td></tr>
 <tr><td>auth#`群员账号`*</td><td>群权限（只读） 1-群员;2-管理;3-群主</td></tr>
 <tr><td>lst#`群员账号`*</td><td>最后发言时间（只读） [时间戳，秒]</td></tr>
 </tbody></table>
+
 
 ### setGroupConf(groupID, keyConf, val)
 
@@ -811,6 +820,7 @@ malformed number near '86400..'
     <tr><td>LogEnd</td><td>日志完成后，上传前</td></tr>
     <tr><td>WhisperIgnored</td><td>私聊不识别为指令且未触发回复</td></tr>
 </tbody></table>
+
 *被踢出群不含解散，被禁言不含全群禁言*
 *GroupAuthorize、LogEnd、WhisperIgnored时点在消息处理时，对应Event为Message，其余事件Event为其自身*
 <table><thead><tr><th>event参数</th><th>说明</th></tr></thead><tbody>
@@ -859,10 +869,10 @@ answer = event.fromMsg
 -answer = string.sub(answer,string.find(answer,"答案：")+#"答案：")
 true_answer = "正确回案"
 if string.find(answer,"true_answer") then
-    log("收到"..getUserConf(event.fromUser,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答通过√",1)
+    log("收到"..getUserConf(event.uid,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答通过√",1)
     event.approval = true --通过申请
 else
-    log("收到"..getUserConf(event.fromUser,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答错误×",1)
+    log("收到"..getUserConf(event.uid,"name").."("..event.fromUser.."的好友请求:\n"..answer.."\n回答错误×",1)
     event.approval = false
 end
 event.blocked = true --终止连锁，不执行原生申请处理流程
