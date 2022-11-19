@@ -2,7 +2,7 @@
 
 手册更新时间：20220607
 
-*这是Dice!于2022.10.29更新2.6.5rc(629)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
+*这是Dice!于2022.11.18更新2.6.5(631)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
 用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
 更多内容可参看[Dice!论坛](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
@@ -44,10 +44,11 @@
 
 - 重写认主机制
 - 恢复cloud update远程更新
-- reply新增限制lock项，与msg_order合并
-- 优化消息转义，支持case、grade条件输出，支持welcome有限转义
+- reply与msg_order合并，新增限制项lock
+- 优化消息转义，支持case、grade条件输出等，支持welcome有限转义
 - 留档每日数据至/user/daily/
 - 优化mod on/off热插拔，支持mod get安装/info信息/detail详细信息/delete卸载/reload重载/update更新/reinstall重装
+- WebUI新增模块管理页
 - mod新增image与audio子目录
 - 支持TimeZoneLag项手动调整时差
 - 新增各项lua交互特性，新增函数getSelfData,msg:format等
@@ -508,6 +509,10 @@ DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等�
 
 特别地，Dice!识别一条待发送消息中的分页符(`'\f'`)，并沿分页符将消息拆成多条，依序送入消息发送队列。分页符无法在指令输入时直接录入，可以输入{FormFeed}作为消息分段，调用时会自动转义。
 
+#### 回复引用原消息(.admin ReferMsgReply=1)
+
+(**仅gocq及MQ系列可用**)开启后所有公屏消息回复将引用原消息。
+
 #### 本系骰识别
 
 Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有登记信息。新入群遍历群成员时将统计可识别本系骰数量。由于禁言反制和踢出反制是Dice!的默认协议，让Dice!骰去禁言/踢出另一只Dice!骰无疑是愚蠢的，因此在执行group ban/kick前会先查询目标是否为Dice!骰，是则不会进行实际操作。基于骰主所拥有的隐私权，云端不可见(CloudVisible=0)的Dice!骰不会被识别。
@@ -712,8 +717,12 @@ sb
 #### 登录失败
 
 - **当前版本过低**[00020]：所有非本地原因的登录失败都会返回错误码00020，该错误码的官方说明即为“当前版本过低”，实际原因可能是账号登录被tx判定有风险等，可以选择更换登录协议等方法尝试。 
+
 - 登录环境被判定风险：Mirai或gocq的登录设备信息在device.json中，设备信息可能被标记风险，可通过删除账号的原device.json重新尝试。
-- 骰娘账号手机登录时，在同一wifi下登录框架有更高成功率。若如此且框架为mirai或gocq，可在登录成功后将device.json文件迁移至用于稳定运行的网络环境。
+
+- 骰娘账号手机登录时，在同一wifi下登录框架有更高成功率。若如此且框架为mirai或gocq，可在登录成功后将设备信息文件`device.json`迁移至用于稳定运行的网络环境(gocq可额外迁移登录会话文件`session.token`)。
+
+- gocq显示*密码错误或账号被冻结*但实际并没有：原理不明，常见于刚解除冻结后，可尝试删除config.yml中的密码改为扫码登录。
 
 框架登录通过的成功率：**同wifi下扫码登录>异地扫码登录>短信验证登录>无验证登录**
 
@@ -730,12 +739,20 @@ sb
 - 心跳报告失败：心跳只是向后台发送骰娘当前状态，不影响骰娘运行 
 - jrrp获取失败：访问境外jrrp服务器失败会向后台报错，但用户会正常收到回执，不影响使用
 - log上传失败：访问境外log服务器失败，需要手动从\user\log\文件夹提取txt 
-- 不良记录上传失败：无法生成云黑wid，可以在审判群内发warning申请补录
+- 不良记录上传失败：无法生成云黑wid，可以在官群内发warning申请补录
 
 #### 磁盘空间占用增多
 
 - Mirai一键脚本使用.git更新文件，会造成.git文件夹堆积，如无回退需要可以直接删除
 - Dice目录下`user/log/`所存储的.log记录文件不会在log结束后销毁，需要手动清理
+
+#### 忘记WebUI管理密码
+
+删除`conf/WebUIPassword.digest`，密码将自动重置。
+
+#### 当前运行环境不与MiraiNative兼容
+
+Mirai启动时检测64位jre启动，而官方版本的MiraiNative只支持32位。请使用[MiraiDiceWindows一键脚本](https://drive.kokona.tech/s/y8WPcEpfMNRyCTa)部署后的`更新.cmd`，并确保根目录没有64位jre后启动。
 
 ### 附录
 

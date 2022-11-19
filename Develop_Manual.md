@@ -56,7 +56,10 @@ Mod采用类Paradox风格结构，Dice存档目录/mod/下的json文件及其同
         |   |-- reply_good_morning.lua
         |
         |-- speech
-            |-- rlobal_msg.yaml
+        |   |-- rlobal_msg.yaml
+        |
+        |-- image
+        |-- audio
 ```
 ### Mod主文件
 
