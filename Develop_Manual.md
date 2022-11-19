@@ -698,17 +698,17 @@ getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
 <tr><td>属性值</td><td>任意</td><td>待存数据</td></tr>
 </tbody></table>
 
-### drawDeck(deckName, groupID, userID)
+### drawDeck(groupID, userID, deckName)
 
 从指定牌堆抽牌。
 
 ```lua
-drawDeck("俄罗斯轮盘", msg.fromGroup, msg.fromQQ)
+drawDeck(msg.fromGroup, msg.fromQQ, "中文双字")
 ```
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
-<tr><td>牌堆名</td><td>string</td><td>优先抽取牌堆实例</td></tr>
 <tr><td>群号</td><td>number</td><td>可以为空</td></tr>
 <tr><td>用户账号</td><td>number</td><td>可以为空</td></tr>
+<tr><td>牌堆名</td><td>string</td><td>优先抽取牌堆实例</td></tr>
 </tbody></table>
 
 ### mkDirs(pathDir)
