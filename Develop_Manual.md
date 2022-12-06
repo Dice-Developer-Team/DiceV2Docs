@@ -7,7 +7,7 @@
 本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复、Dice!2.6.4(build612)支持的事件处理等所作的说明，**当前对应最新版本Dice!2.6.5(630)**。通过在plugin目录放入lua脚本，Dice!将监听特定消息或事件并做出响应，基于时刻或循环处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
 
 1. 过于客制化而无法使用现有数据结构表现的功能，如：基于D20结果的数值分段回复；
-2. 同人性质或版本各异的规则，如：JOJO团、圣杯团、方舟团等；
+2. 同人性质或版本各异的规则，如：JOJO团、圣杯团、骑士团、方舟团等；
 3. 因受众过偏不适合写入骰娘源代码的规则；
 4. 非骰娘功能，如：好感度系统；
 
@@ -396,11 +396,11 @@ until( cnt_dice < 1 )	--条件为真则跳出循环
 
 ## 前缀指令脚本
 
-Dice!在收到消息时，将先匹配基础指令(.authorize/.dismiss/.warning/.master/.bot/.helpdoc/.help)，然后匹配自定义前缀指令，之后再执行内建指令。*（因此自定义指令可用于替换原有指令）*根据匹配到的前缀，Dice!将取到加载时注册的脚本文件和指令函数名，执行对应函数。
+Dice!在收到消息时，将先匹配基础指令(`.authorize/.dismiss/.warning/.master/.bot/.helpdoc/.help`)，然后匹配自定义指令(`Type=Order`类reply)，之后再执行内建指令，再匹配自定义回复(`Type=Reply`)。*（因此自定义指令可用于替换原有指令）*根据匹配到的前缀，Dice!将取到加载时注册的脚本文件和指令函数名，执行对应函数，并将消息未匹配的部分存为`msg.suffix`。
 
 ### 指令函数
 
-指令函数的参数msg可看做一张记录消息语境的表（实际为Lua类型userdata，以Dice定义的Context为元表），msg.fromMsg、msg.fromGroup、msg.fromUser分别表示消息文本、来源群、来源QQ。
+指令函数的参数msg可看做一张记录消息语境的表（实际为Lua类型userdata，以Dice定义的Context为元表），msg.fromMsg、msg.uid、msg.gid分别表示消息文本、来源群、来源用户。
 
 指令函数的返回值可以有0到2个，如有，第一个返回值表示直接回复的语句，第二个返回值表示私聊回复的语句（用于暗骰/暗抽/暗检定，会同时发送给ob用户）。由于Dice!在发送消息时会将换页符'\f'视为消息分段发送，实际上可以通过一个返回值返回多段回复。
 
@@ -482,9 +482,59 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 - lua文件中需要调用http函数时，**应当与目标网页的编码一致（基本是UTF8）**
 - lua文件使用require或os等以文件名为参数的函数，且路径含有非ASCII字符时，**必须使用GBK**；
 
+## 附录：Dice!预置的lua元表
+
+### Context
+
+#### get(self, field, defaultVal)
+
+取语境中变量，如#3省略，则`context:get(field)`可等效于`context[field]`。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>语境</td><td>Context</td><td>形如context:get()可省略#1</td></tr>
+<tr><td>变量字段</td><td>string</td><td>字段会先进行一次转义</td></tr>
+<tr><td>候补值</td><td>任意</td><td>如未定义该变量则返回该值</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>任意</td><td>待取变量</td></tr>
+</tbody></table>
+
+#### format(self, rawString)
+
+在该语境下转义文本。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>语境</td><td>Context</td><td>形如msg:format()可省略#1</td></tr>
+<tr><td>待转义文本</td><td>string</td><td></td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>string</td><td>转义后文本</td></tr>
+</tbody></table>
+
+
+#### echo(self, replyMsg, isRaw)
+
+回复消息，有来源聊天窗口的事件也可以用`event:echo(replyMsg)`。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>语境</td><td>Context</td><td>形如msg:echo()可省略#1</td></tr>
+<tr><td>待回复消息</td><td>string</td><td></td></tr>
+<tr><td>是否禁用转义</td><td>boolean</td><td>可省略，默认转义</td></tr>
+</tbody></table>
+
+#### inc(self, field, val)
+
+自增变量，仅对数字有效。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>语境</td><td>Context</td><td>形如context:set()可省略#1</td></tr>
+<tr><td>变量字段</td><td>string</td><td>字段会先进行一次转义</td></tr>
+<tr><td>自增量</td><td>number</td><td>可省略，表示+1</td></tr>
+</tbody></table>
+
 ## 附录：Dice!预置的lua函数
 
-**调用前注意Dice版本是否匹配！**Dice!2.6.3总计19条预置函数，1条msg方法。
+**调用前注意Dice版本是否匹配！**Dice!2.6.5总计预置19条全局函数，4条http函数，4条context方法。
 
 *类型为number的参数，一般也可传入可数字化的字符串，如msg.fromGroup.*
 
@@ -698,19 +748,6 @@ getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
 <tr><td>属性值</td><td>任意</td><td>待存数据</td></tr>
 </tbody></table>
 
-### drawDeck(deckName, groupID, userID)
-
-从指定牌堆抽牌。
-
-```lua
-drawDeck("俄罗斯轮盘", msg.fromGroup, msg.fromQQ)
-```
-<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
-<tr><td>牌堆名</td><td>string</td><td>优先抽取牌堆实例</td></tr>
-<tr><td>群号</td><td>number</td><td>可以为空</td></tr>
-<tr><td>用户账号</td><td>number</td><td>可以为空</td></tr>
-</tbody></table>
-
 ### mkDirs(pathDir)
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
@@ -721,28 +758,66 @@ drawDeck("俄罗斯轮盘", msg.fromGroup, msg.fromQQ)
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
 <tr><td>等待毫秒数</td><td>number</td><td></td></tr>
 </tbody></table>
+### http
 
-### msg:echo(replyMsg)
+#### http.get
 
-回复消息，有来源聊天窗口的事件也可以用`event:echo(replyMsg)`
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
-<tr><td>待回复消息</td><td>string</td><td></td></tr>
+<tr><td>待访问url</td><td>string</td><td>若含须转义字符须用urlEncode转义</td></tr>
 </tbody></table>
+<table><thead><tr><th>返回值</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>连接是否成功</td><td>boolean</td><td></td></tr>
+<tr><td>网页返回内容</td><td>string</td><td>访问失败则返回错误原因</td></tr>
+</tbody></table>
+#### http.post
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>待访问url</td><td>string</td><td>若含须转义字符须用urlEncode转义</td></tr>
+<tr><td>post数据</td><td>string</td><td>如为table则自动序列化为json格式</td></tr>
+<tr><td>header</td><td>string</td><td>可省略，默认Content-Type: application/json，如为table将自动拼接</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>连接是否成功</td><td>boolean</td><td></td></tr>
+<tr><td>网页返回内容</td><td>string</td><td>访问失败则返回错误原因</td></tr>
+</tbody></table>
+
+#### http.urlEncode
+
+将url中须转义的字符进行转义。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>待编码url</td><td>string</td><td></td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>编码后url</td><td>string</td><td></td></tr>
+</tbody></table>
+
+#### http.urlDecode
+
+还原url中转义的字符。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>待解码url</td><td>string</td><td></td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值</th><th>变量类型</th><th>说明</th></tr></thead><tbody
+<tr><td>解码后url</td><td>string</td><td></td></tr>
+</tbody></table>
+
 
 ## 附录：自定义指令常用的正则匹配
 
 解析参数时，可使用string.match的第三个参数来略过指令前缀部分，从指令长度+1的位置开始匹配。注意单个汉字的长度大于1且受字符编码影响，不提倡手动数中文指令长度。
 
 ```lua
---指令参数为消息余下部分时，去除前后两端的空格
-local rest = string.match(msg.fromMsg,"^[%s]*(.-)[%s]*$",#order_name+1)
+--前缀匹配且指令参数为消息余下部分时，去除前后两端的空格
+local rest = string.match(msg.suffix,"^[%s]*(.-)[%s]*$")
 
 --指令参数为单项整数时，直接用%d+表示匹配一个或多个数字，未输入数字时匹配失败返回nil
-local cnt = string.match(msg.fromMsg,"%d+",#order_name+1)
+local cnt = string.match(msg.fromMsg,"%d+")
 
 --同上，%d*表示匹配0或任意个数字，未输入数字时匹配成功返回空字符串""
 --该匹配模式需要确保数字之前的其他字符已被排除
-local cnt = string.match(msg.fromMsg,"%d*",#order_name+1)
+local cnt = string.match(msg.fromMsg,"%d*")
 
 --参数使用空格分隔且不限数目，遍历匹配
 local item,rest = "",string.match(msg.fromMsg,"^[%s]*(.-)[%s]*$",#order_select_name+1)
@@ -822,7 +897,10 @@ malformed number near '86400..'
     <tr><td>GroupAuthorize</td><td>群申请许可后，处理前</td></tr>
     <tr><td>LogEnd</td><td>日志完成后，上传前</td></tr>
     <tr><td>WhisperIgnored</td><td>私聊不识别为指令且未触发回复</td></tr>
+    <tr><td>DayEnd</td><td>（时差修正后）0点后刷新每日数据前</td></tr>
+    <tr><td>DayNew</td><td>刷新每日数据后</td></tr>
 </tbody></table>
+
 
 *被踢出群不含解散，被禁言不含全群禁言*
 *GroupAuthorize、LogEnd、WhisperIgnored时点在消息处理时，对应Event为Message，其余事件Event为其自身*
@@ -1153,8 +1231,6 @@ function print_chat(msg)
 end
 
 function Sleep(n)
-   --570实现方式
-   if n > 0 then os.execute("ping -n " .. (n+1) .. " localhost > NUL") end
    --575+实现方式
    if n > 0 then sleepTime(n*1000) end
 end
@@ -1175,186 +1251,5 @@ function sitanya_clock(msg)
     return "{nick}的定时器:<".. seconds ..">秒已到期"
 end
 msg_order[".clock"] = "sitanya_clock"
-```
-
-## 附录：关联好感的互动指令
-
-由于~~当初设计用户记录时没有考虑奇奇怪怪的功能~~骰娘不会数小数，UserConf只支持整数型的数字存取。如果一定要保存小数，有三种替代方案：
-
-- 基于精确的小数位数，为保存的原始数据作乘法（如精确三位，则保存数据时*1000，读取时除以1000），如此也避免了浮点数精度问题
-- 将小数作为字符串存取
-- 将数据使用文件存取
-
-差分回复可通过好感阈值或ranint(1,100)随机判定实现，此处通过阈值实现。
-
-```lua
-msg_order = {}
-function topercent(num)
-    if(num==nil)then
-        return ""
-    end
-    return string.format("%.2f",num/100)
-end
-
-today_gift_limit = 3   --单日次数上限
-function add_favor_once()
-    --单次固定好感上升
-    return 100  
-    --随机好感上升
-    --return ranint(50,150)  
-end
-function add_gift_once()	--单次计数上升
-    return 5  
-    --return ranint(1,10)  
-end
-
-function rcv_gift(msg)
-    --判定当日上限
-    local today_gift = getUserToday(msg.fromQQ,"gifts",0)
-    if(today_gift>=today_gift_limit)then
-        return "差不多够了吧{nick}，我今天已经腻了"
-    end
-    today_gift = today_gift + 1
-    setUserToday(msg.fromQQ, "gifts", today_gift)
-    --计算今日/累计投喂，存取在骰娘用户记录上
-    local DiceQQ = getDiceQQ()
-    local gift_add = add_gift_once()
-    local self_today_gift = getUserToday(DiceQQ,"gifts")+gift_add
-    setUserToday(DiceQQ,"gifts",self_today_gift)
-    local self_total_gift = getUserConf(DiceQQ,"gifts",0)+gift_add
-    setUserConf(DiceQQ,"gifts",self_total_gift)
-    --更新好感度
-    local favor = getUserConf(msg.fromQQ,"好感度",0) + add_favor_once()
-    setUserConf(msg.fromQQ, "好感度", favor)
-    return "你眼前一黑，手中的食物瞬间消失，再看的时候，眼前的烧酒口中还在咀嚼着什么，扭头躲开了你的目光\n今日已收到投喂"..topercent(self_today_gift).."kg\n累计投喂"..topercent(self_total_gift).."kg"
-end
-msg_order["喂食惠惠"]= "rcv_gift"
-
-function punish_favor()	--好感下降
-	return 150
-	--return ranint(100,300)
-end
-function table_draw(tab)
-    return tab[ranint(1,#tab)]
-end
---不同好感阈值的待选回复池
-reply_favor_less = {
-	"呜哇！这里有变态....呐可以炸掉吗，把他炸成灰没有问题吧",
-	"嗯嗯嗯接着夸，嗯？(僵住)",
-}
-reply_favor_low = {
-	"哎？突突突突然说什么啊，这样我可要把这句话告诉主人了哦。。",
-	"色图还不够满足{nick}吗！最多让你揉揉脑袋!"
-}
-reply_favor_high = {
-	"糟糕。。。动，动不了",
-	"至少不要在这里....QAQ",
-}
-reply_favor_highiest = {
-	"讨厌啦……这种事情",
-	"这件事情不要告诉主人哦~",
-}
-function papapa(msg)
-	if(msg.fromQQ == "000000000")then	--特别用户特别对待
-    	return "呜哇，为什么主人你也……"
-    end
-    --判定当日上限
-	local today_limit = 1
-    local today_times = getUserToday(msg.fromQQ,"pa",0)
-    if(today_times>=today_limit)then
-        return "{nick}今天还嫌不够吗？"
-    end
-	setUserToday(msg.fromQQ,"pa",today_times+1)
-	--基于好感阈值差分
-    local favor = getUserConf(msg.fromQQ,"好感度",0)
-	if(favor<5000)then
-    	local punish = punish_favor()
-    	setUserConf(msg.fromQQ,"好感度",favor-punish)
-    	return table_draw(reply_favor_less).."\n{nick}的某些数值悄悄下降了——"..topercent(punish)
-    elseif(favor<8000)then
-    	return table_draw(reply_favor_low)
-    elseif(favor<10000)then
-    	return table_draw(reply_favor_high)
-    else
-    	return table_draw(reply_favor_highiest)
-    end
-end
-
-msg_order["啪惠惠"]= "papapa"
-
-function show_favor(msg)
-    local favor = getUserConf(msg.fromQQ,"好感度",0)
-	if(favor<5000)then
-    	return "对{nick}的好感度只有"..topercent(favor).."，要加油哦"
-    elseif(favor<8000)then
-    	return "对{nick}的好感度有"..topercent(favor).."，有在花心思呢"
-    elseif(favor<10000)then
-    	return "好感度到"..topercent(favor).."了，不愧是{nick}呢"
-    else
-    	return "对{nick}的好感度已经有"..topercent(favor).."了，以后也要永远在一起哦"
-    end
-end
-msg_order["惠惠好感"]= "show_favor"
-```
-
-## 附录：广播问安任务及订阅问安指令
-
-```lua
-task_call = {
-    good_morning="good_morning",
-    good_afternoon="good_afternoon",
-    good_evening="good_evening",
-    good_night="good_night",
-}
-notice_head = ".send notice 6 "
-function table_draw(tab)
-    if(#tab==0)then return "" end
-    return tab[ranint(1,#tab)]
-end
-morning_word = {
-    "早安~",
-}
-afternoon_word = {
-    "下午好~",
-}
-evening_word = {
-    "晚上好~",
-}
-night_word = {
-    "晚安~",
-}
-
-function good_morning()
-    eventMsg(notice_head..table_draw(morning_word), 0, getDiceQQ())
-end
-function good_afternoon()
-    eventMsg(notice_head..table_draw(afternoon_word), 0, getDiceQQ())
-end
-function good_evening()
-    eventMsg(notice_head..table_draw(evening_word), 0, getDiceQQ())
-end
-function good_night()
-    eventMsg(notice_head..table_draw(night_word), 0, getDiceQQ())
-end
-
-function printChat(msg)
-    if(msg.fromGroup=="0")then
-        return "QQ "..msg.fromQQ
-    else
-        return "group "..msg.fromGroup
-    end
-end
-
-msg_order = {}
-function book_alarm_call(msg)
-    eventMsg(".admin notice "..printChat(msg).." +6", 0, getDiceQQ())
-    return "已订阅{self}的定时早午晚安服务√"
-end
-function unbook_alarm_call(msg)
-    eventMsg(".admin notice "..printChat(msg).." -6", 0, getDiceQQ())
-    return "已退订{self}的定时早午晚安服务√"
-end
-msg_order["订阅问安"]="book_alarm_call"
-msg_order["退订问安"]="unbook_alarm_call"
 ```
 
