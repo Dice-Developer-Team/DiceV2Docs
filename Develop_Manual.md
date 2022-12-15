@@ -4,7 +4,7 @@
 
 ## 简介
 
-本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复、Dice!2.6.4(build612)支持的事件处理等所作的说明，**当前对应最新版本Dice!2.6.5(630)**。通过在plugin目录放入lua脚本，Dice!将监听特定消息或事件并做出响应，基于时刻或循环处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
+本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复、Dice!2.6.4(build612)支持的事件处理等所作的说明，**当前对应最新版本Dice!2.6.6rc(638)**。通过在mod目录安装扩展模块，在plugin目录放入lua脚本或toml配置文件，Dice!将监听特定消息或事件并做出响应，也可基于时刻或循环处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
 
 1. 过于客制化而无法使用现有数据结构表现的功能，如：基于D20结果的数值分段回复；
 2. 同人性质或版本各异的规则，如：JOJO团、圣杯团、骑士团、方舟团等；
@@ -37,9 +37,12 @@ You should have received a copy of the GNU Affero General Public License along w
 ]]
 ```
 
-## Mod结构
+## 模块Mod
 
-Mod采用类Paradox风格结构，Dice存档目录/mod/下的json文件及其同名文件夹构成：`mod_name.json`写有mod的标题、作者、版本信息、说明文本等；同名`mod_name`目录下子目录存放不同类型文件。
+**模块是Dice!外置可热插拔的扩展文件集**，远程装卸、开关的单元。Mod采用类Paradox风格结构，由`Dice目录/mod/`下的json文件及其同名文件夹构成：`mod_name.json`写有mod的标题、作者、版本信息、说明文本等；同名`mod_name`目录下子目录存放不同类型文件。
+
+*阅读说明：下文中形如`(build609+)`的注释用于说明该特性在何时被添加或最后编辑，开发者应当在制作mod时，将`dice_build`设定为满足mod内所有特性要求的最小build。*
+
 ```
 [DiceData]
 |-- mod
@@ -65,31 +68,35 @@ Mod采用类Paradox风格结构，Dice存档目录/mod/下的json文件及其同
 
 ```json
 {
-    "mod":"角色卡栏位扩展",
+    "title":"角色卡栏位扩展",
     "ver":"1.0.0",
     "author":"安研色Shiki",
     "dice_build":606,
     "brief":"角色卡栏位扩展（状态栏、物品栏、法术栏、专长栏、笔记栏等）",
+    "require":[],
     "comment":"",
     "helpdoc":{
-        "mod":"模块名称",
+        "title":"模块名称",
         "ver":"mod版本号",
     	"author":"作者署名",
         "dice_build":"支持mod运行的最低Dice!版本号，低于此项的Dice!将放弃读取该mod",
     	"brief":"会在Dice!中展示的模块简介",
+    	"require":"mod所需前置mod，若未满足则将放弃加载",
     	"comment":"不会写入，仅用作文件内的注释项",
         "helpdoc":"帮助文档，其中的项目可被.help获取"
     }
 }
 ```
 
-mod主文件读取成功后，Dice!将尝试进一步读取同名子目录。
+mod主文件读取成功后，Dice!将尝试进一步读取同名子目录*(build599+)*。
 
 ### Mod子目录
 
 #### event
 
-以lua形式向表event写入事件。load时读入，修改后需要`system load`应用。
+以lua*(build609+)*或toml*(build636+)*形式向表event写入事件。load时读入，修改后需要`system load`应用。
+
+##### lua格式
 
 ```lua
 event.listen_friend_request = { --该事件的ID，唯一对应，同名覆盖
@@ -121,13 +128,34 @@ event.heartbeat = {
 }
 ```
 
+##### toml格式
+
+```toml
+[event.listen_friend_request]   
+title = "好友审核"
+trigger.hook = "FriendRequest"
+action.lua = "listen_friend_request"
+
+[event.good_morning]   
+title = "早安"
+trigger.clock = [{hour=7,minute=30}]
+action.lua = "daily.good_morning"
+
+[event.heartbeat]   
+title = "心跳"
+trigger.cycle = { minute=5,second=30 }
+action.lua = "heartbeat"
+```
+
 #### reply
 
-以lua形式向表msg_reply写入关键词回复。load时读入，修改后需要`system load`应用。
+以lua*(build603+)*或toml*(build636+)*形式向表`msg_reply`（toml为`reply`）写入关键词回复。load时读入，修改后需要`system load`应用。
 
 - keyword: 触发该回复的关键词，可以有多种触发形式和多个关键词。
 - limit: 触发限制条件。table键值表示`条件类型=条件内容`。
-- echo: 回复内容。值为文本时，回复该文本；值为数组时，作为牌堆回复；值为`{lua=文件名}`时，调用lua文件。
+- echo: 回复内容。值为文本时，回复该文本；值为数组时，作为牌堆回复；值为表且形如`{lua=文件名}`时，调用lua文件。
+
+##### lua格式
 
 ```lua
 msg_reply.good_morning = {	--该条msg_reply的id，唯一对应，同名覆盖
@@ -136,7 +164,6 @@ msg_reply.good_morning = {	--该条msg_reply的id，唯一对应，同名覆盖
         prefix = {"早安","早上好"},
     },
     limit = {
-        cd = { user = 60 },
         today = { user = 1 },	--每用户当日触发次数
     },
     echo = {
@@ -154,6 +181,22 @@ msg_reply.good_night = {
     echo = "{reply_good_night}"	--直接回复文本
 }
 ```
+
+##### toml格式
+
+```toml
+[reply.good_morning]
+keyword = { match = "早", prefix = ["早安","早上好"] }
+limit.today.user = 1
+echo.lua = "reply_good_morning"
+
+[reply.good_night]
+keyword.prefix = "晚安"
+limit = { cd = { user = 60 }, today = { user = 2 }}
+echo = "{reply_good_night}"
+```
+
+
 
 #### script
 
@@ -176,7 +219,7 @@ end
 
 #### speech
 
-台词speech是自定义回执文本的上位，可直接由花括号转义。每项条目可存多条文本，等效于单抽放回的牌堆或{sample}。load时读入，修改后需要`system load`应用。
+*(build603+)*台词speech是自定义回执文本的上位，可直接由花括号转义。每项条目可存多条文本，等效于单抽放回的牌堆或{sample}。load时读入，修改后需要`system load`应用。
 
 ```yaml
 reply_good_morning:
@@ -195,11 +238,11 @@ strRollRegularSuccess:
 
 #### image
 
-图片文件夹，会在mod加载后复制到`/data/image`文件夹中用于在消息中发送。
+*(build633+)*图片文件夹，会在mod加载时复制到`/data/image`文件夹中用于在消息中发送。
 
 #### audio
 
-语音文件夹，会在mod加载后复制到`/data/record`文件夹中用于发送语音。
+*(build633+)*语音文件夹，会在mod加载时复制到`/data/record`文件夹中用于发送语音。
 
 ## Lua快速教程
 
@@ -209,7 +252,7 @@ strRollRegularSuccess:
 
 Lua是一种用标准C语言编写并开源的嵌入式脚本语言。
 
-Lua语句不使用分号或其它标点作结尾，不使用大括号或缩进表示作用域，使用"end"作为函数、条件判断、while循环的结束。单行注释以"--"开头，与或非运算符使用"and""or""not"。Lua字符串与数组的首位索引均为1，而不是一般编程语言的0。
+Lua语句不使用分号或其它标点作结尾，不使用大括号或缩进表示作用域，使用"end"作为函数、条件判断、while循环的结束。单行注释以"--"开头，与或非运算符使用"`and`""`or`""`not`"。Lua字符串与数组的首位索引均为1，而不是一般编程语言的0。
 
 ### Lua标识符
 
@@ -534,13 +577,14 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 
 ## 附录：Dice!预置的lua函数
 
-**调用前注意Dice版本是否匹配！**Dice!2.6.5总计预置19条全局函数，4条http函数，4条context方法。
+**调用前注意Dice版本是否匹配！**Dice!2.6.6总计预置19条全局函数，4条http函数，4条context方法。
 
 *类型为number的参数，一般也可传入可数字化的字符串，如msg.fromGroup.*
 
 ### log(info[,notice_level])
 
-发送日志
+*(build598+)*发送日志
+
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>日志内容</td><td>string</td><td>待输出日志内容</td></tr>
 <tr><td>通知窗口级别</td><td>number</td><td>选填，若空则只输出到框架日志界面</td></tr>
@@ -548,8 +592,8 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 
 ### loadLua(scriptName)
 
-运行Lua文件，返回目标脚本的返回值(build575+)
-参数使用相对路径且无后缀，根目录为plugin文件夹或mod内script文件夹
+运行Lua文件，返回目标脚本的返回值
+参数使用相对路径且无后缀，根目录为plugin文件夹*(build575+)*或mod内script文件夹*(build575+)*
 与Lua自带的require函数不同，目标文件定义的变量会保持生命周期
 
 ```lua
@@ -586,22 +630,27 @@ loadLua("PC/COC7")
 <tbody><tr><td>string</td><td>取Dice存档目录</td></tr>
 </tbody></table>
 
-### eventMsg(msg, fromGroup, fromUser)
+### eventMsg(msg, gid, uid)
 
-虚构一条消息进行处理，不计入指令频度。
+虚构一条消息进行处理，不计入指令频度。可使用参数列表`eventMsg(msg, gid, uid)`或*(build608+)*参数包形式`eventMsg(pkg)`.
 
 ```lua
-eventMsg(".rc Rider Kick:70 踢西鹿", msg.fromGroup, msg.fromQQ)
+eventMsg(".rc Rider Kick:70 踢西鹿", msg.gid, msg.uid)
+eventMsg({
+        fromMsg = ".rc Rider Kick:70 踢西鹿",
+        gid = msg.gid,
+        uid = msg.uid,
+})
 ```
-<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
-<tr><td>消息文本</td><td>string</td><td></td></tr>
-<tr><td>来源群</td><td>number</td><td>可以为空</td></tr>
-<tr><td>发送者</td><td>number</td><td></td></tr>
+<table><thead><tr><th>输入参数/pkg子项</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>消息文本/fromMsg</td><td>string</td><td></td></tr>
+<tr><td>来源群/gid</td><td>number</td><td>可以为空</td></tr>
+<tr><td>发送者/uid</td><td>number</td><td></td></tr>
 </tbody></table>
 
 ### sendMsg发送消息
 
-可使用参数列表`sendMsg(msg, gid, uid)`或参数包形式`sendMsg(pkg)`发送
+可使用参数列表`sendMsg(msg, gid, uid)`或*(build619+)*参数包形式`sendMsg(pkg)`发送.
 
 ```lua
 sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
@@ -641,10 +690,11 @@ getUserToday(msg.uid, "jrrp")
 
 ### getUserConf(userID, keyConf, defaultVal)
 
-取用户配置项，带*的配置项会另行计算而非调用存储数据
+取用户配置，配置项带\*标记表示会另行计算而非调用存储数据。*(build613+)*参数1可以为空，此时遍历所有**记录了该属性**的用户并返回以账号=属性值为键值对的table。
 
 ```lua
-getUserConf(msg.fromQQ, "好感度", 0)
+getUserConf(msg.fromQQ, "favor", 0)
+getUserConf(nil, "favor") --返回所有用户的favor列表
 ```
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>用户账号</td><td>number</td><td></td></tr>
@@ -678,7 +728,7 @@ getUserConf(msg.fromQQ, "好感度", 0)
 
 ### getGroupConf(groupID, keyConf, defaultVal)
 
-取群配置项，带*的配置项会另行计算而非调用存储数据
+取群配置，配置项带\*标记表示会另行计算而非调用存储数据。*(build613+)*群号可以为空，此时遍历所有**记录了该属性**的群并返回以群号=属性值为键值对的table。
 
 ```lua
 getGroupConf(msg.fromQQ, "rc房规", 0)
@@ -703,6 +753,7 @@ getGroupConf(msg.fromQQ, "rc房规", 0)
 <tr><td>auth#`群员账号`*</td><td>群权限（只读） 1-群员;2-管理;3-群主</td></tr>
 <tr><td>lst#`群员账号`*</td><td>最后发言时间（只读） [时间戳，秒]</td></tr>
 </tbody></table>
+
 
 
 ### setGroupConf(groupID, keyConf, val)
@@ -760,6 +811,8 @@ getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
 </tbody></table>
 ### http
 
+*(build590+)*
+
 #### http.get
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
@@ -773,13 +826,14 @@ getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody
 <tr><td>待访问url</td><td>string</td><td>若含须转义字符须用urlEncode转义</td></tr>
-<tr><td>post数据</td><td>string</td><td>如为table则自动序列化为json格式</td></tr>
-<tr><td>header</td><td>string</td><td>可省略，默认Content-Type: application/json，如为table将自动拼接</td></tr>
+<tr><td>post数据</td><td>string</td><td>(build634+)如为table则自动序列化为json格式</td></tr>
+<tr><td>header</td><td>string</td><td>(build606+)可省略，默认Content-Type: application/json，(build629+)如为table将自动拼接</td></tr>
 </tbody></table>
 <table><thead><tr><th>返回值</th><th>变量类型</th><th>说明</th></tr></thead><tbody
 <tr><td>连接是否成功</td><td>boolean</td><td></td></tr>
 <tr><td>网页返回内容</td><td>string</td><td>访问失败则返回错误原因</td></tr>
 </tbody></table>
+
 
 #### http.urlEncode
 
@@ -882,6 +936,7 @@ malformed number near '86400..'
 - json: [在线JSON校验格式化工具](https://www.bejson.com/)
 - yaml: [YAML、YML在线编辑器(格式化校验)](https://www.bejson.com/validators/yaml_editor/)
 - lua: [在线运行Lua ](https://www.bejson.com/runcode/lua/)
+- toml: [在线TOML转YAML工具](https://tooltt.com/toml2yaml/)
 
 ## 附录：事件event样例
 

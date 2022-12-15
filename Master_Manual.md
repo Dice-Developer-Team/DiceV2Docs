@@ -2,7 +2,7 @@
 
 手册更新时间：20220607
 
-*这是Dice!于2022.11.20更新2.6.5fix(632)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
+*这是Dice!于2022.12.15更新2.6.6rc(638)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
 用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
 更多内容可参看[Dice!论坛](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
@@ -40,14 +40,24 @@
 - [更新历史](#更新历史)
 - [后记](#后记)
 
-### 更新说明(2.6.5)
+### 更新说明(2.6.6)
+
+- 新增: [变量赋值转义标识var](#文本转义标识)
+- 新增: 转义[send定向发送](#消息发送(.send))的消息
+- 新增: toml读写
+- 新增: webui[远程获取模块资源](#远程模块资源)
+- 新增: webui可进行mod调序
+- 优化: [webui可定制化](#个性化WebUI)
+- 修复: rc附带奖惩骰时无法调取属性
+
+#### 2.6.5
 
 - 重写认主机制
 - 恢复cloud update远程更新
 - reply与msg_order合并，新增限制项lock
-- 优化消息转义，支持case、grade条件输出等，支持welcome有限转义
+- 优化[消息转义](#文本转义标识)，支持case、grade条件输出等，支持welcome有限转义
 - 留档每日数据至/user/daily/
-- 优化mod on/off热插拔，支持mod get安装/info信息/detail详细信息/delete卸载/reload重载/update更新/reinstall重装
+- 优化`mod on/off`热插拔，支持`mod get安装/info信息/detail详细信息/delete卸载/reload重载/update更新/reinstall重装`
 - WebUI新增模块管理页
 - mod新增image与audio子目录
 - 支持TimeZoneLag项手动调整时差
@@ -503,6 +513,8 @@ DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等�
 
 `[CQ:emoji,id=xxx]` 发送对应十进制编码的Unicode字符
 
+`[CQ:reply,id=xxx]`（群聊且限定在开头适用）回复引用指定id的消息
+
 #### 消息送间隔(.admin SendIntervalIdle=500)
 
 一般地，Dice!的待发送QQ消息不会立即发送，而是进入发送队列排队发送，并在每次发送后等待固定时间，即发送间隔(ms)。`SendIntervalIdle`控制闲时发送间隔，`SendIntervalBusy`控制忙时发送间隔。
@@ -517,9 +529,9 @@ DiceDriver会将不同框架下接收的QQ富文本消息（图片、语音等�
 
 Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有登记信息。新入群遍历群成员时将统计可识别本系骰数量。由于禁言反制和踢出反制是Dice!的默认协议，让Dice!骰去禁言/踢出另一只Dice!骰无疑是愚蠢的，因此在执行group ban/kick前会先查询目标是否为Dice!骰，是则不会进行实际操作。基于骰主所拥有的隐私权，云端不可见(CloudVisible=0)的Dice!骰不会被识别。
 
-### 个性化
+## 个性化
 
-#### 自定义文本转义
+### 文本转义标识
 
 回复文本中可以通过特定的{}标记转义文本，当前花括号支持嵌套。
 
@@ -531,13 +543,29 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 部分转义方法：
 
 - `{at:目标用户}`-at用户，省略参数则at消息对象；
+
 - `{help:条目名}`-获取帮助文档指定条目；
+
 - `{ran:最小值~最大值}`-从范围中随机取值；
+
 - `{sample:分项1|分项2(...|分项n)}`-从所有分项中随机均匀抽取一项插入文本。例：` {sample:效果拔群|干得漂亮}`；
+
 - `{case:uid?账号1=1号专属文本&账号2=2号专属文本&else=通用文本}`-根据消息语境中的变量分条件回复；
+
 - `{grade:user.favor?0=用户&100=亲爱的&else=讨厌鬼}`-根据消息语境中的变量分档位回复；
 
-#### 扩展模块mod
+- `{wait:5000}`-处理时延迟指定的毫秒数
+
+- `{var:变量名?值}`-赋值变量并打印
+
+  `{var:变量1=值1&变量2=值2}`-多变量赋值，不打印
+
+其他转义标识：
+
+- `{br}`换行
+- `{FormFeed}`分条发送
+
+### 扩展模块mod
 
 扩展模块放入[DiceData]/mod/读取，可加载自定义回执、自定义回复与帮助词条，详见[开发手册](https://v2docs.kokona.tech/zh/latest/Develop_Manual.html)。mod按序读取，且从后向前覆盖。
 
@@ -548,9 +576,21 @@ Dice2.5.0+可以通过调用后台接口以识别目标QQ是否在Dice!云端有
 `.mod detail 模块名` 指定模块详细信息
 `.mod delete 模块名` 卸载指定模块
 
+#### 远程模块资源
+
+![远程资源界面](_Static/WebUI_mod_source.png)
+
+可以在`WebUI->模块管理->远程资源`中查看远程mod库列表并远程安装。
+
+### 个性化WebUI
+
+Dice!2.6.6更新后将WebUI主页面写出到`[DiceData]/webui/index.html`，同时webui目录可通过WebUI端口访问。
+
+### 自定义
+
 #### 扩展指令
 
-扩展脚本可放入[DiceData]/plugin/读取。文件样例见附录，更多内容请参阅[脚本手册]()。默认可使用`.help扩展指令` 查询载入的指令。
+扩展脚本可放入`[DiceData]/plugin/`读取。文件样例见附录，更多内容请参阅[脚本手册]()。默认可使用`.help扩展指令` 查询载入的指令。
 
 #### 自定义帮助词条(.helpdoc)
 
@@ -705,15 +745,15 @@ sb
 
 将牌堆文件放入[DiceData]/PublicDeck内并重启或load，即可使用牌堆内的条目。牌堆名以'_'开头时，无法直接使用draw命令抽取。
 
-### 支持作者
+## 支持作者
 
 溯洄正在为后续的开发计划众筹:[https://afdian.net/@suhuiw4123](https://afdian.net/@suhuiw4123)
 
-[也欢迎在爱发电支持Shiki](https://afdian.net/@dice_shiki):https://afdian.net/@dice_shiki
+[欢迎在爱发电支持Shiki](https://afdian.net/@dice_shiki):https://afdian.net/@dice_shiki
 
 也可以微信赞赏Shiki:![](_static/wechat_pay_shiki.png)
 
-### 常见问题
+## 常见问题
 
 #### 登录失败
 
@@ -759,7 +799,7 @@ sb
 
 Mirai启动时检测64位jre启动，而官方版本的MiraiNative只支持32位。请使用[MiraiDiceWindows一键脚本](https://drive.kokona.tech/s/y8WPcEpfMNRyCTa)部署后的`更新.cmd`，并确保根目录没有64位jre后启动。
 
-### 附录
+## 附录
 
 #### 配置项目表
 详见WebUI`Master设置`页
@@ -867,7 +907,7 @@ Mirai启动时检测64位jre启动，而官方版本的MiraiNative只支持32位
 
 #### 更新说明(2.5.2)
 
-- 支持[自定义文本](#自定义文本转义)使用sample转义多选一
+- 支持[自定义文本](#文本转义标识)使用sample转义多选一
 - [自动清理过期用户数据](#过期数据自动清理(.admin InactiveUserLine/InactiveGroupLine=360))（默认360天）
 - 高频指令通知将显示最后一次指令的内容
 - 增加入群后对[同系Dice!的识别](#本系骰识别)
