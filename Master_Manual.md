@@ -782,10 +782,28 @@ sb
 
 在窗口标题栏右键`属性->选项->编辑选项`页下，关闭`快速编辑模式`，确定。
 
+### Dice驱动器启动失败
+
+#### \[Fatal\]: listen tcp 127.0.0.1:15800: bind: Only one usage of each socket address \<protocol/network address/port\> is normally permitted.
+
+ws连接的端口被占用（极大可能是多个go-cqhttp程序使用相同默认的初始端口），需要修改`config.yaml`使每个go-cqhttp配置的端口各不相同:
+
+```yaml
+# config.yml 底端部分
+# 连接服务列表
+servers:
+  # 正向WS设置
+  - ws:
+      # 正向WS服务器监听地址，修改此处以避免冲突
+      address: 127.0.0.1:15801
+      middlewares:
+        <<: *default # 引用默认中间件
+```
+
 ### 磁盘空间占用增多
 
-- Mirai一键脚本使用.git更新文件，会造成.git文件夹堆积，如无回退需要可以直接删除
-- Dice目录下`user/log/`所存储的.log记录文件不会在log结束后销毁，需要手动清理
+- Mirai一键脚本使用.git更新文件，会造成.git文件夹堆积，如无回退需要可以直接删除；
+- Dice目录下`user/log/`所存储的.log记录文件不会在log结束后销毁，部分log可能存在长期记录而不被关闭的情况，需要手动清理；
 
 ### 忘记WebUI管理密码
 
