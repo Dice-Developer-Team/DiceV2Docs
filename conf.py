@@ -24,13 +24,13 @@ from recommonmark.transform import AutoStructify
 source_suffix = ['.rst', '.md']
 
 project = 'Dice!'
-copyright = '2020-2022, Suhui & Shiki'
+copyright = '2020-2023, Suhui & Shiki'
 author = 'Suhui & Shiki'
 master_doc = 'index'
 
-version = '2.6.5'
+version = '2.6.6'
 # The full version, including alpha/beta/rc tags
-release = '2.6.5-rc'
+release = '2.6.6-rc'
 
 
 # -- General configuration ---------------------------------------------------

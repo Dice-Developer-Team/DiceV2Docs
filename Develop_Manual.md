@@ -4,14 +4,14 @@
 
 ## 简介
 
-本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复、Dice!2.6.4(build612)支持的事件处理等所作的说明，**当前对应最新版本Dice!2.6.6rc(638)**。通过在mod目录安装扩展模块，在plugin目录放入lua脚本或toml配置文件，Dice!将监听特定消息或事件并做出响应，也可基于时刻或循环处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
+本手册是对Dice!2.4.2(build570)新增的自定义指令功能、Dice!2.5.1(build577)新增的自定义任务、Dice!2.6.0(build577)支持调用Lua的关键词回复、Dice!2.6.4(build612)支持的事件处理等所作的说明，**当前对应最新版本Dice!2.7.0alpha6(644)**。通过在mod目录安装扩展模块，在plugin目录放入lua/js/py脚本或toml配置文件，Dice!将监听特定消息或事件并做出响应，也可基于时刻或循环处理定时任务，从而实现骰主对骰娘的深度化定制。扩展模块旨在以下方面实现对Dice!内建功能的补充：
 
 1. 过于客制化而无法使用现有数据结构表现的功能，如：基于D20结果的数值分段回复；
 2. 同人性质或版本各异的规则，如：JOJO团、圣杯团、骑士团、方舟团等；
 3. 因受众过偏不适合写入骰娘源代码的规则；
 4. 非骰娘功能，如：好感度系统；
 
-从零编写lua脚本需要对lua有一定的了解，**建议使用VS Code等工具编辑脚本**。如果实在脚本苦手，手册附录准备了现成的样例脚本，你也**可以在Shiki官方群或论坛内找到Shiki免费发布共享的脚本**。Shiki的桌游指令集已收录：DND检定、ShadowRun、双重十字、永夜后日谈（命中检定）、祸不单行、山屋惊魂。**如果你只要安装现成脚本，只需记住在存档目录下创建plugin文件夹，将lua文件放入后启动或.system load。**如果你实在有想实现的指令，没办法修改现成脚本实现，也确实找不到人白嫖的话，可以联系Shiki定制。愿所有人能从Dice!骰娘处获得更好的用户体验，拥有自己独一无二的骰娘。
+从零编写脚本需要对Dice所支持脚本语言（lua/javascript/python）的其中一种有一定的了解，**建议使用VS Code等工具编辑脚本**。如果实在脚本苦手，手册附录准备了现成的样例脚本，你也**可以在Shiki官方群或[论坛](https://forum.kokona.tech/)内找到Shiki免费发布共享的脚本**。Shiki的桌游指令集已收录：DND检定、ShadowRun、双重十字、永夜后日谈（命中检定）、祸不单行、山屋惊魂。**如果你只要安装现成模块，只需记住在webui界面【模块管理】子标签【远程资源】下选择安装；或手动将mod文件放入mod文件夹后启动或.system load。**如果你实在有想实现的指令，没办法修改现成脚本实现，也确实找不到人白嫖的话，可以联系Shiki定制。愿所有人能从Dice!骰娘处获得更好的用户体验，拥有自己独一无二的骰娘。
 
 Shiki的开发官方群:【一群】928626681【二群】1029435374
 
@@ -27,8 +27,8 @@ Shiki的开发官方群:【一群】928626681【二群】1029435374
 
 ```lua
 --[[ 
-Copyright (C) 2018-2021 w4123溯洄
-Copyright (C) 2019-2021 String.Empty
+Copyright (C) 2018-2022 w4123溯洄
+Copyright (C) 2019-2023 String.Empty
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
@@ -36,6 +36,207 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU Affero General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. 
 ]]
 ```
+
+## 脚本语言嵌入说明
+
+Dice!在更新过程中支持嵌入Lua(Dice!2.4.2)、Python(Dice!2.7.0)、JavaScript(Dice!2.7.0)脚本，包括执行语句或执行文件。
+
+### Lua嵌入方式
+
+#### ①指定脚本文件的指定函数名
+
+最原始的形式，只能定义前缀匹配关键词的指令。
+
+```lua
+--/plugin/hello_world.lua
+msg_order = {
+    ["hello"] = "hello,world",
+}
+
+function (msg)
+    return "hello,world"
+end
+```
+
+#### ②指定语句
+
+常用于直接以`.reply`指令或webui设置回复：
+
+>.reply set Title = hello_world
+>
+>Prefix=hello
+>
+>Lua=return "hello,world"
+
+
+```toml
+#/mod/hello_lua/reply/hello_world.toml
+#可以在toml文件内写入脚本语句但不推荐
+[reply.hello]
+type = "Order"
+keyword.prefix = "hello"
+echo.lua = """return 'hello,world'"""
+```
+
+```lua
+--/mod/hello_lua/reply/hello_world.lua
+--可以这么写但完全不推荐，请采用④
+reply.hello = {
+    type = "Order",
+    echo = {
+        lua = [[return "hello,world"]]
+    },
+}
+```
+
+#### ③指定脚本文件
+
+既可用于直接以`.reply`指令或webui设置回复，又可用于mod内设置：
+
+>  .reply set Title = hello_world
+>
+> Prefix=hello
+>
+> Lua="hello_world"
+
+```toml
+#/mod/hello_lua/reply/hello_world.toml
+[reply.hello]
+type = "Order"
+keyword.prefix = "hello"
+echo.lua = "hello_world"
+```
+
+```lua
+--/mod/hello_lua/script/hello_world.lua
+return "hello,world"
+```
+
+#### ④直接定义函数
+
+```lua
+--/mod/hello_lua/reply/hello_world.lua
+reply.hello = {
+    type = "Order",
+    echo = {
+        lua = function(msg)
+            return "hello,world"
+        end
+    }
+}
+```
+
+### Lua嵌入特性
+
+- 每次lua脚本执行都在独立的虚拟机(lua_State)中，全局变量相互独立；
+- 每次新建虚拟机时将预置函数写入全局；
+- 由于整数自动转换为字符串时会保留一位小数，取账号ID或群号时多用字符串类型；
+- 执行关键词回复的lua脚本时，依嵌入方式视为在全局对象中写入msg后运行，或将msg作为参数传入后执行函数；运行返回值可文本化时，将作为消息回复；
+
+### JavaScript嵌入方式
+
+#### ①指定语句
+
+常用于直接以`.reply`指令或webui设置回复：
+
+>.reply set Title = hello_world
+>
+>Prefix=hello
+>
+>Js="hello,world"
+
+
+```toml
+#/mod/hello_lua/reply/hello_world.toml
+#可以在toml文件内写入脚本语句但不推荐
+[reply.hello]
+type = "Order"
+keyword.prefix = "hello"
+echo.js = """'hello,world'"""
+```
+
+#### ②指定脚本文件
+
+既可用于直接以`.reply`指令或webui设置回复，又可用于mod内设置：
+
+>  .reply set Title = hello_world
+>
+>  Prefix=hello
+>
+>  Js="hello_world"
+
+```toml
+#/mod/hello_lua/reply/hello_world.toml
+[reply.hello]
+type = "Order"
+keyword.prefix = "hello"
+echo.js = "hello_world"
+```
+
+```javascript
+--/mod/hello_lua/script/hello_world.js
+msg.echo("hello,world")
+```
+
+### JavaScript嵌入特性
+
+- Dice!采用（修改后支持MSVC的）Quickjs实现JavaScript的嵌入；
+- 所有js脚本执行共用一个运行时(JSRuntime)，每次的语境(JSContext)相互独立，全局变量相互独立；
+- 每次新建语境时将预置函数写入全局；
+- 执行关键词回复的js脚本时，视为在全局对象中写入msg后运行；
+
+### Python嵌入方式
+
+#### ①指定语句
+
+常用于直接以`.reply`指令或webui设置回复：
+
+>.reply set Title = hello_world
+>
+>Prefix=hello
+>
+>Py=msg.echo("hello,world")
+
+
+```toml
+#/mod/hello_lua/reply/hello_world.toml
+#可以在toml文件内写入脚本语句但不推荐
+[reply.hello]
+type = "Order"
+keyword.prefix = "hello"
+echo.py = """msg.echo('hello,world')"""
+```
+
+#### ②指定脚本文件
+
+既可用于直接以`.reply`指令或webui设置回复，又可用于mod内设置：
+
+>  .reply set Title = hello_world
+>
+>  Prefix=hello
+>
+>  Py="hello_world"
+
+```toml
+#/mod/hello_lua/reply/hello_world.toml
+[reply.hello]
+type = "Order"
+keyword.prefix = "hello"
+echo.py = "hello_world"
+```
+
+```javascript
+--/mod/hello_lua/script/hello_world.py
+msg.echo("hello,world")
+```
+
+### Python嵌入特性
+
+- Dice!采用CPython实现Python的嵌入，需要外部安装有python3.10，如环境变量中不包含python，Windows环境可将`python3.dll`、`python310.dll`与`python310.zip`放入`Dice根目录/bin`文件夹下，然后设置Master配置项`EnablePython`=1并重启；
+- 所有py脚本执行共用一个虚拟机，需**慎用全局变量**；
+- 全局初始化时以`from dicemaid import *`的方式写入预置函数；
+- 执行关键词回复的py脚本时，视为在本地变量中写入msg后运行；运行结果可文本化时，将作为消息回复；
+- 向用户数据中写入元表(Tuple)时，将视同列表(List)处理；
 
 ## 模块Mod
 
@@ -436,6 +637,12 @@ until( cnt_dice < 1 )	--条件为真则跳出循环
 
 好了，现在你已经了解了lua的全部基本语法，可以自己动手自定义几乎任何跑团规则的掷骰指令，或是自制牌堆/好感互动指令了~
 
+### 编写帮助
+
+- lua没有三目运算符，但可以通过短路运算符`or`和`and`实现类似效果；
+
+  `0.1+0.2==0.3 and 'true' or 'false'`
+
 
 ## 前缀指令脚本
 
@@ -483,41 +690,116 @@ msg_order[order_word_2] = "custom_order"
 --注意：本手册所提供脚本样例并非固定，仅基于模板化考虑选定该格式。
 ```
 
-## 定制任务脚本
 
-*关于plugin的通用机制参见指令脚本部分*
 
-Dice!在当日时间（时:分）达到预设的时点，会触发定时任务（`.admin clock`设置）。根据设置中的任务名，Dice!将取到加载时注册的脚本文件和任务函数名，执行对应函数。
+## 开发帮助
 
-### 任务函数
+### 类型处理
 
-任务函数没有输出参数，返回值也没有意义。定时任务可以用于某些扩展功能定时发送消息或每日重置状态。
+lua使用`type()`以`string`类型返回变量类型，js使用`typeof()`以字符串形式返回变量类型，python使用`type()`以`type`类型返回变量类型。
 
-### 任务注册
+<table><thead><tr><th>变量</th><th>type(lua)</th><th>typeof(js)</th><th>type(py)</th></tr></thead><tbody>
+<tr><td>未定义</td><td>nil</td><td>undefined</td><td>报错：is not defined</td></tr>
+    <tr><td>1==0</td><td>boolean</td><td>boolean</td><td>bool</td></tr>
+    <tr><td>0</td><td>number</td><td>number</td><td>int</td></tr>
+    <tr><td>3.14</td><td>number</td><td>number</td><td>float</td></tr>
+    <tr><td>'hello'</td><td>string</td><td>string</td><td>str</td></tr>
+</tbody></table>
 
-在启动或.system load时，Dice!会遍历plugin目录下的所有lua文件，读取task_call表中的键值对。当定时任务匹配到任务名时，Dice!将读取记录的文件名并调用指定函数。
+### 常用语句
 
-### 样例模板
+#### 类型转换
+
+lua字符串连接时会自动类型转换为字符串，但整数转换时会保留一位小数，需要手动使用`string.format`
+
 
 ```lua
---声明表task_call,初始化时会遍历plugin文件，读取task_call表中的指令名
---task_call中的键值对表示 任务名->函数名
-task_call = {}
---声明任务名，允许多个任务名对应一个函数
-task_name = "任务名"
---声明任务函数主体，函数名可自定义
-function custom_task()
-    --函数执行内容
-end
-task_call[task_name] = "custom_task"	--value为字符串格式且与任务函数名一致
---注意：本手册所提供脚本样例并非固定，仅基于模板化考虑选定该格式。
+--lua
+local i = 233
+local pi = 3.14
+string.format("%d",i)	--整数转字符串，如果参数#2不为整数会报错
+string.format("%.0f",pi)	--指定小数位数转字符串
+print("pi="..math.pi)
+```
+JavaScript字符串连接时会自动类型转换
+
+```javascript
+//js
+console.log("pi="+)
+```
+python字符串连接时不会自动类型转换
+
+```python
+#python
+pi = 3.14
+print("pi=" + str(pi))
 ```
 
+#### 字符串操作
 
 
-## 开发说明
+```lua
+--lua
+--去除首尾空格
+str:match("^[%s]*(.-)[%s]*$")
+```
 
-##### lua文件的字符编码问题
+```javascript
+//js
+//去除首尾空格
+str.trim();
+```
+
+```python
+#python
+#去除首尾空格
+str.strip()
+```
+
+#### 时间日期操作
+
+```lua
+--lua
+--获取现在离1970年1月1日0时所过秒数
+local t_now = os.time()
+
+--格式化输出日期(YYYY-MM-DD HH:mm:ss，以系统所在时区)
+local fmt_now = os.date("%Y-%m-%d %H:%M:%S")
+local fmt_dt = os.date("%Y-%m-%d %H:%M:%S", t_now)
+```
+
+```js
+//js
+var d_now = new Date();
+//获取现在离1970年1月1日0时所过毫秒数
+var t_now = new Date().getTime();
+
+//格式化输出日期(YYYY-MM-DD HH:mm:ss，以系统所在时区)
+function pad(num) {
+    return num.toString().padStart(2, '0');
+}
+function formatDateTime(date = new Date()) {
+    return date.getFullYear()+'-'+pad(date.getMonth() + 1)+'-'+pad(date.getDate())+' '
+    +pad(date.getHours())+':'+pad(date.getMinutes())+':'+pad(date.getSeconds());
+}
+var fmt_now = formatDateTime()
+var fmt_dt = formatDateTime(dt_now)
+```
+
+````python
+#python
+import time
+#获取现在离1970年1月1日0时所过秒数
+t_now = time.time()
+
+#格式化输出日期(YYYY-MM-DD HH:mm:ss，以系统所在时区)
+fmt_now = time.strftime('%Y-%m-%d %H:%M:%S')
+fmt_dt = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t_now))
+````
+
+### 文件的字符编码问题
+
+**除lua/js外的文件一律请以utf8编码。**
 
 Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的lua文件，在读写字符串时将自动检测utf-8编码并转换。而出现以下情况时，编码并非二者皆可：
 
@@ -525,9 +807,15 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 - lua文件中需要调用http函数时，**应当与目标网页的编码一致（基本是UTF8）**
 - lua文件使用require或os等以文件名为参数的函数，且路径含有非ASCII字符时，**必须使用GBK**；
 
-## 附录：Dice!预置的lua元表
+## 附录：Dice!预置Lua元表及全局函数
 
-### Context
+**调用前注意Dice版本是否匹配！**Dice!2.7.0总计预置19条全局函数，4条http函数，4条context方法。
+
+*类型为number的参数，一般也可传入可数字化的字符串，如'msg.fromGroup'。*
+
+### Context元表
+
+**语境Context**，用于交互event或reply中事件上下文信息，如uid、gid等。
 
 #### get(self, field, defaultVal)
 
@@ -553,8 +841,6 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 <table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>string</td><td>转义后文本</td></tr>
 </tbody></table>
-
-
 #### echo(self, replyMsg, isRaw)
 
 回复消息，有来源聊天窗口的事件也可以用`event:echo(replyMsg)`。
@@ -574,12 +860,24 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 <tr><td>变量字段</td><td>string</td><td>字段会先进行一次转义</td></tr>
 <tr><td>自增量</td><td>number</td><td>可省略，表示+1</td></tr>
 </tbody></table>
+### Actor元表
 
-## 附录：Dice!预置的lua函数
+*(build644+)* **角色卡Actor**。
 
-**调用前注意Dice版本是否匹配！**Dice!2.6.6总计预置19条全局函数，4条http函数，4条context方法。
+#### rollDice(exp)
 
-*类型为number的参数，一般也可传入可数字化的字符串，如msg.fromGroup.*
+调用角色卡的默认骰*(__DefaultDice)*及默认掷骰表达式*(__DefaultDiceExp)*进行掷骰，返回table记录掷骰结果。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>掷骰表达式</td><td>string</td><td></td></tr>
+</tbody></table>
+
+<table><thead><tr><th>返回值字段</th><th>字段类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>expr</td><td>string</td><td>规范化后的表达式</td></tr>
+<tr><td>sum</td><td>number</td><td>掷骰结果（表达式合法时）</td></tr>
+<tr><td>expansion</td><td>string</td><td>掷骰展开式（表达式合法时）</td></tr>
+<tr><td>error</td><td>number</td><td>错误类型（表达式非法时）</td></tr>
+</tbody></table>
 
 ### log(info[,notice_level])
 
@@ -618,7 +916,7 @@ loadLua("PC/COC7")
 </tbody></table>
 ### getDiceQQ()
 
-取Dice账号
+取DiceMaid自身账号
 <table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
 <tbody><tr><td>string</td><td>取骰子自身账号</td></tr>
 </tbody></table>
@@ -648,7 +946,7 @@ eventMsg({
 <tr><td>发送者/uid</td><td>number</td><td></td></tr>
 </tbody></table>
 
-### sendMsg发送消息
+### sendMsg(msg, gid, uid)
 
 可使用参数列表`sendMsg(msg, gid, uid)`或*(build619+)*参数包形式`sendMsg(pkg)`发送.
 
@@ -754,8 +1052,6 @@ getGroupConf(msg.fromQQ, "rc房规", 0)
 <tr><td>lst#`群员账号`*</td><td>最后发言时间（只读） [时间戳，秒]</td></tr>
 </tbody></table>
 
-
-
 ### setGroupConf(groupID, keyConf, val)
 
 存群配置项
@@ -833,8 +1129,6 @@ getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
 <tr><td>连接是否成功</td><td>boolean</td><td></td></tr>
 <tr><td>网页返回内容</td><td>string</td><td>访问失败则返回错误原因</td></tr>
 </tbody></table>
-
-
 #### http.urlEncode
 
 将url中须转义的字符进行转义。
@@ -856,22 +1150,397 @@ getPlayerCardAttr(msg.fromQQ, msg.fromGroup, "理智", val_default)
 <table><thead><tr><th>返回值</th><th>变量类型</th><th>说明</th></tr></thead><tbody
 <tr><td>解码后url</td><td>string</td><td></td></tr>
 </tbody></table>
+## 附录：Dice预置JavaScript原型及全局函数
+
+*(build640+)*
+
+### Actor原型
+
+*(build644+)* **角色卡Actor**。
+
+#### rollDice(exp)
+
+调用角色卡的默认骰*(__DefaultDice)*及默认掷骰表达式*(__DefaultDiceExp)*进行掷骰，返回table记录掷骰结果。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>掷骰表达式</td><td>string</td><td></td></tr>
+</tbody></table>
+
+<table><thead><tr><th>返回值字段</th><th>字段类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>expr</td><td>String</td><td>规范化后的表达式</td></tr>
+<tr><td>sum</td><td>Number</td><td>掷骰结果（表达式合法时）</td></tr>
+<tr><td>expansion</td><td>String</td><td>掷骰展开式（表达式合法时）</td></tr>
+<tr><td>error</td><td>Number</td><td>错误类型（表达式非法时）</td></tr>
+</tbody></table>
+
+### log(info[,notice_level])
+
+发送日志
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>日志内容</td><td>String</td><td>待输出日志内容</td></tr>
+<tr><td>通知窗口级别</td><td>Number</td><td>选填，若空则只输出到框架日志界面</td></tr>
+</tbody></table>
+
+### getDiceID()
+
+取DiceMaid自身账号
+
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>Number</td><td>取骰子自身账号</td></tr>
+</tbody></table>
+### getDiceDir()
+
+取Dice存档目录，用于自行读写文件
+
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>String</td><td>取Dice存档目录</td></tr>
+</tbody></table>
+### eventMsg(msg, gid, uid)
+
+虚构一条消息进行处理，不计入指令频度。可使用参数列表`eventMsg(msg, gid, uid)`或*(build608+)*参数包形式`eventMsg(pkg)`.
+
+```lua
+eventMsg(".rc Rider Kick:70 踢", msg.gid, msg.uid)
+eventMsg({
+        fromMsg = ".rc Rider Kick:70 踢",
+        gid = msg.gid,
+        uid = msg.uid,
+})
+```
+
+<table><thead><tr><th>输入参数/pkg子项</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>消息文本/fromMsg</td><td>String</td><td></td></tr>
+<tr><td>来源群/gid</td><td>Number</td><td>可以为空</td></tr>
+<tr><td>发送者/uid</td><td>Number</td><td></td></tr>
+</tbody></table>
+
+### sendMsg(msg, gid, uid)
+
+可使用参数列表`sendMsg(msg, gid, uid)`或*(build619+)*参数包形式`sendMsg(pkg)`发送.
+
+```lua
+sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
+```
+
+<table><thead><tr><th>输入参数/pkg子项</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>fwdMsg</td><td>String</td><td>待发送消息</td></tr>
+<tr><td>gid</td><td>Number</td><td>私聊时为空</td></tr>
+<tr><td>uid</td><td>Number</td><td>群聊时可以为空</td></tr>
+<tr><td>chid</td><td>Number</td><td>频道id，仅参数包可用</td></tr>
+</tbody></table>
+
+### getUserToday(userID, keyConf, defaultVal)
+
+取用户今日数据项。特别地，配置项为"jrrp"时，所取值同`.jrrp`结果。所有当日数据会在系统时间24时清空。
+
+```lua
+getUserToday(msg.uid, "jrrp")
+```
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值，为空则返回0</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
+
+### setUserToday(userID, keyConf, val)
+
+存用户今日数据项
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
+
+### getUserAttr(userID, keyConf, defaultVal)
+
+取用户配置，配置项带\*标记表示会另行计算而非调用存储数据。*(build613+)*参数1可以为空，此时遍历所有**记录了该属性**的用户并返回以账号=属性值为键值对的table。
+
+```lua
+getUserConf(msg.fromQQ, "favor", 0)
+getUserConf(nil, "favor") --返回所有用户的favor列表
+```
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
 
 
-## 附录：自定义指令常用的正则匹配
+<table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
+<tr><td>trust</td><td>用户信任（仅4以下可编辑）</td></tr>
+<tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
+<tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
+<tr><td>name</td><td>*用户账号昵称（只读）</td></tr>
+<tr><td>nick</td><td>*全局称呼（备取账号昵称）</td></tr>
+<tr><td>nick#`群号`</td><td>*特定群内的称呼（备取群名片->全局称呼->账号昵称）</td></tr>
+<tr><td>nn</td><td>*全局nn</td></tr>
+<tr><td>nn#`群号`</td><td>*特定群内的nn</td></tr>
+</tbody></table>
 
-解析参数时，可使用string.match的第三个参数来略过指令前缀部分，从指令长度+1的位置开始匹配。注意单个汉字的长度大于1且受字符编码影响，不提倡手动数中文指令长度。
+
+### setUserAttr(userID, keyConf, val)
+
+存用户配置项
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
+
+### getGroupAttr(groupID, keyConf, defaultVal)
+
+取群配置，配置项带\*标记表示会另行计算而非调用存储数据。*(build613+)*群号可以为空，此时遍历所有**记录了该属性**的群并返回以群号=属性值为键值对的table。
+
+```lua
+getGroupConf(msg.fromQQ, "rc房规", 0)
+```
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>群号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
+<table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
+<tr><td>name</td><td>*群名称（只读）</td></tr>
+<tr><td>size</td><td>*群人数（只读）</td></tr>
+<tr><td>maxsize</td><td>*群规模（只读）</td></tr>
+<tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
+<tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
+<tr><td>members</td><td>群用户列表</td></tr>
+<tr><td>admins</td><td>群管理列表</td></tr>
+<tr><td>card#`群员账号`</td><td>*群名片</td></tr>
+<tr><td>auth#`群员账号`</td><td>*群权限（只读） 1-群员;2-管理;3-群主</td></tr>
+<tr><td>lst#`群员账号`</td><td>*最后发言时间（只读） [时间戳，秒]</td></tr>
+</tbody></table>
+
+### setGroupAttr(groupID, keyConf, val)
+
+存群配置项
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>群号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
+
+## 附录：Dice预置Python类及模块函数
+
+*(build639+)*Dice!2.7.0总计预置dicemaid模块19条函数，4条context方法。dicemaid模块已在初始化时import，故可以如全局函数般调用。
+
+### Actor类
+
+*(build644+)* **角色卡Actor**。
+
+#### rollDice(exp)
+
+调用角色卡的默认骰*(__DefaultDice)*及默认掷骰表达式*(__DefaultDiceExp)*进行掷骰，返回table记录掷骰结果。
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>掷骰表达式</td><td>string</td><td></td></tr>
+</tbody></table>
+
+<table><thead><tr><th>返回值字段</th><th>字段类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>expr</td><td>String</td><td>规范化后的表达式</td></tr>
+<tr><td>sum</td><td>Number</td><td>掷骰结果（表达式合法时）</td></tr>
+<tr><td>expansion</td><td>String</td><td>掷骰展开式（表达式合法时）</td></tr>
+<tr><td>error</td><td>Number</td><td>错误类型（表达式非法时）</td></tr>
+</tbody></table>
+
+### log(info[,notice_level])
+
+发送日志
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>日志内容</td><td>String</td><td>待输出日志内容</td></tr>
+<tr><td>通知窗口级别</td><td>Number</td><td>选填，若空则只输出到框架日志界面</td></tr>
+</tbody></table>
+
+### getDiceID()
+
+取DiceMaid自身账号
+
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>Number</td><td>取骰子自身账号</td></tr>
+</tbody></table>
+### getDiceDir()
+
+取Dice存档目录，用于自行读写文件
+
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>String</td><td>取Dice存档目录</td></tr>
+</tbody></table>
+
+### eventMsg(msg, gid, uid)
+
+虚构一条消息进行处理，不计入指令频度。可使用参数列表`eventMsg(msg, gid, uid)`或*(build608+)*参数包形式`eventMsg(pkg)`.
+
+```lua
+eventMsg(".rc Rider Kick:70 踢", msg.gid, msg.uid)
+eventMsg({
+        fromMsg = ".rc Rider Kick:70 踢",
+        gid = msg.gid,
+        uid = msg.uid,
+})
+```
+
+<table><thead><tr><th>输入参数/pkg子项</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>消息文本/fromMsg</td><td>String</td><td></td></tr>
+<tr><td>来源群/gid</td><td>Number</td><td>可以为空</td></tr>
+<tr><td>发送者/uid</td><td>Number</td><td></td></tr>
+</tbody></table>
+
+
+### sendMsg(msg, gid, uid)
+
+可使用参数列表`sendMsg(msg, gid, uid)`或*(build619+)*参数包形式`sendMsg(pkg)`发送.
+
+```lua
+sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
+```
+
+<table><thead><tr><th>输入参数/pkg子项</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>fwdMsg</td><td>String</td><td>待发送消息</td></tr>
+<tr><td>gid</td><td>Number</td><td>私聊时为空</td></tr>
+<tr><td>uid</td><td>Number</td><td>群聊时可以为空</td></tr>
+<tr><td>chid</td><td>Number</td><td>频道id，仅参数包可用</td></tr>
+</tbody></table>
+
+
+### getUserToday(userID, keyConf, defaultVal)
+
+取用户今日数据项。特别地，配置项为"jrrp"时，所取值同`.jrrp`结果。所有当日数据会在系统时间24时清空。
+
+```lua
+getUserToday(msg.uid, "jrrp")
+```
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值，为空则返回0</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
+
+
+### setUserToday(userID, keyConf, val)
+
+存用户今日数据项
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
+
+
+### getUserAttr(userID, keyConf, defaultVal)
+
+取用户配置，配置项带\*标记表示会另行计算而非调用存储数据。*(build613+)*参数1可以为空，此时遍历所有**记录了该属性**的用户并返回以账号=属性值为键值对的table。
+
+```lua
+getUserConf(msg.fromQQ, "favor", 0)
+getUserConf(nil, "favor") --返回所有用户的favor列表
+```
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
+
+<table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
+<tr><td>trust</td><td>用户信任（仅4以下可编辑）</td></tr>
+<tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
+<tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
+<tr><td>name</td><td>*用户账号昵称（只读）</td></tr>
+<tr><td>nick</td><td>*全局称呼（备取账号昵称）</td></tr>
+<tr><td>nick#`群号`</td><td>*特定群内的称呼（备取群名片->全局称呼->账号昵称）</td></tr>
+<tr><td>nn</td><td>*全局nn</td></tr>
+<tr><td>nn#`群号`</td><td>*特定群内的nn</td></tr>
+</tbody></table>
+
+### setUserAttr(userID, keyConf, val)
+
+存用户配置项
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
+
+
+### getGroupAttr(groupID, keyConf, defaultVal)
+
+取群配置，配置项带\*标记表示会另行计算而非调用存储数据。*(build613+)*群号可以为空，此时遍历所有**记录了该属性**的群并返回以群号=属性值为键值对的table。
+
+```lua
+getGroupConf(msg.fromQQ, "rc房规", 0)
+```
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>群号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待取配置项</td></tr>
+<tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值</td></tr>
+</tbody></table>
+<table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
+<tbody><tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
+<table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
+<tr><td>name</td><td>*群名称（只读）</td></tr>
+<tr><td>size</td><td>*群人数（只读）</td></tr>
+<tr><td>maxsize</td><td>*群规模（只读）</td></tr>
+<tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
+<tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
+<tr><td>members</td><td>群用户列表</td></tr>
+<tr><td>admins</td><td>群管理列表</td></tr>
+<tr><td>card#`群员账号`</td><td>*群名片</td></tr>
+<tr><td>auth#`群员账号`</td><td>*群权限（只读） 1-群员;2-管理;3-群主</td></tr>
+<tr><td>lst#`群员账号`</td><td>*最后发言时间（只读） [时间戳，秒]</td></tr>
+</tbody></table>
+### setGroupAttr(groupID, keyConf, val)
+
+存群配置项
+
+<table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>群号</td><td>Number</td><td></td></tr>
+<tr><td>配置项</td><td>String</td><td>待存配置项</td></tr>
+<tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
+</tbody></table>
+
+## 附录：自定义指令常用的Lua正则匹配
+
+解析参数时，可使用`msg.suffix`来略过指令前缀匹配的部分，从之后的字符开始匹配。
 
 ```lua
 --前缀匹配且指令参数为消息余下部分时，去除前后两端的空格
-local rest = string.match(msg.suffix,"^[%s]*(.-)[%s]*$")
+local rest = msg.suffix:match("^[%s]*(.-)[%s]*$")
 
 --指令参数为单项整数时，直接用%d+表示匹配一个或多个数字，未输入数字时匹配失败返回nil
-local cnt = string.match(msg.fromMsg,"%d+")
+local cnt = string.match(msg.suffix,"%d+")
 
 --同上，%d*表示匹配0或任意个数字，未输入数字时匹配成功返回空字符串""
 --该匹配模式需要确保数字之前的其他字符已被排除
-local cnt = string.match(msg.fromMsg,"%d*")
+local cnt = string.match(msg.suffix,"%d*")
 
 --参数使用空格分隔且不限数目，遍历匹配
 local item,rest = "",string.match(msg.fromMsg,"^[%s]*(.-)[%s]*$",#order_select_name+1)
@@ -885,7 +1554,20 @@ repeat
 until(rest=="")
 ```
 
-## 附录：lua报错信息说明
+## 附录：常用在线语法校验/运行工具
+
+- json: [在线JSON校验格式化工具](https://www.bejson.com/)
+- toml: [在线TOML转YAML工具](https://tooltt.com/toml2yaml/)
+- yaml: [YAML、YML在线编辑器(格式化校验)](https://www.bejson.com/validators/yaml_editor/)
+- lua: [在线运行Lua](https://www.bejson.com/runcode/lua/)
+  *所用Lua版本(5.3.5)略旧于Dice!内置(5.4)，可能产生差异。*
+- javascript: [在线运行JavaScript](https://www.bejson.com/runcode/javascript/)
+  *注意对js标准的支持存在差异。*
+- python: [在线运行Python(3.8.1)](https://www.bejson.com/runcode/python3/)
+  *所用Python版本(3.8.1)略旧于Dice!内置(3.10)，可能产生差异。*
+- lua/javascript/python: [Judge0 IDE - Free and open-source online code editor](https://ide.judge0.com/)
+
+## 附录：lua常见报错说明
 
 ```lua
 module '%s' not found:
@@ -931,13 +1613,6 @@ malformed number near '86400..'
 -- 数字与字符连接符粘连导致误判为小数点，使得格式解析错误，需要插入空格
 ```
 
-## 附录：常用语法在线校验器
-
-- json: [在线JSON校验格式化工具](https://www.bejson.com/)
-- yaml: [YAML、YML在线编辑器(格式化校验)](https://www.bejson.com/validators/yaml_editor/)
-- lua: [在线运行Lua ](https://www.bejson.com/runcode/lua/)
-- toml: [在线TOML转YAML工具](https://tooltt.com/toml2yaml/)
-
 ## 附录：事件event样例
 
 ### 代理事件
@@ -955,10 +1630,9 @@ malformed number near '86400..'
     <tr><td>DayEnd</td><td>（时差修正后）0点后刷新每日数据前</td></tr>
     <tr><td>DayNew</td><td>刷新每日数据后</td></tr>
 </tbody></table>
+- *被踢出群不含解散，被禁言不含全群禁言*
+- *GroupAuthorize、LogEnd、WhisperIgnored时点在消息处理时，对应Event为Message，其余事件Event为其自身*
 
-
-*被踢出群不含解散，被禁言不含全群禁言*
-*GroupAuthorize、LogEnd、WhisperIgnored时点在消息处理时，对应Event为Message，其余事件Event为其自身*
 <table><thead><tr><th>event参数</th><th>说明</th></tr></thead><tbody>
     <tr><td>uid</td><td>当事用户</td></tr>
     <tr><td>gid</td><td>当事群</td></tr>
