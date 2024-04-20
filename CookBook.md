@@ -214,7 +214,7 @@ Dice!较新版本中，给予骰娘群权限的群能得到更多信任，这暗
 
 ## 四、骰娘怎么做
 
-简而言之：准备一个干净的QQ号，选择合适的框架[下载LLOneBot](https://forum.kokona.tech/d/2019-dicellonebotda-jian-zhi-nan) ，[Mirai](https://github.com/mamoe/mirai)，[Dice!Chronocat](https://forum.kokona.tech/d/1995-dicechronocatshi-yong-shuo-ming)，[gocq](https://forum.kokona.tech/d/1590-kuang-jia-zhi-nan-dicegocqban-da-jian-shuo-ming)，[Dice!Alter](https://forum.kokona.tech/d/2002-kuang-jia-zhi-nan-dicealterji-yu-huan-xiang-xiang-jie-ru-qqguan-fang-jie-kou)装入Dice插件，用QQ账号密码登录（可能需要登录验证），在启动dicedrive后，一只新骰娘就诞生了。
+简而言之：准备一个干净的QQ号，选择合适的框架[下载LLOneBot](https://forum.kokona.tech/d/2019-dicellonebotda-jian-zhi-nan) ，[下载Mirai](https://github.com/mamoe/mirai)，[下载Dice!Chronocat](https://forum.kokona.tech/d/1995-dicechronocatshi-yong-shuo-ming)，[下载gocq](https://forum.kokona.tech/d/1590-kuang-jia-zhi-nan-dicegocqban-da-jian-shuo-ming)，[下载Dice!Alter](https://forum.kokona.tech/d/2002-kuang-jia-zhi-nan-dicealterji-yu-huan-xiang-xiang-jie-ru-qqguan-fang-jie-kou)装入Dice插件，用QQ账号密码登录（可能需要登录验证），在启动dicedrive后，一只新骰娘就诞生了。
 
 整合包可以在[官方网站](https://kokona.tech) 找到下载地址
 
