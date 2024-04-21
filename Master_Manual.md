@@ -125,6 +125,7 @@
 #### 选择一个框架
 
 MiraiAndroid是当前不使用模拟器在**手机挂载Dice**的唯一选择，MiraiDice也支持在Linux、MacOS等系统挂载Dice，详见[Dice! 论坛 Mirai版教程](https://forum.kokona.tech/d/448-mirai-dice-20210324)。
+注：由于需签名服务器，该方案无法正常使用
 
 ##### 框架接口差异
 
