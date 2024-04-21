@@ -116,11 +116,11 @@
 
 ### QQ框架(Dice!2.5.0+)
 
-2.5.0版本，Dice!本体由酷Q插件改为了独立于框架的dll，由作为框架插件的DiceDriver加载，具体能实现的接口视框架条件而不同。先驱跑路后，Dice!驱动器目前支持Mirai、MyQQ、MyQQA、OnoQQAir、go-cqhttp框架，也在跟进OvQQ等更新。由于不同版本适配进度不同，你可能无法找到以下所有版本。*Miria加载DiceDriver须使用MiraiNative插件。*
+2.5.0版本，Dice!本体由酷Q插件改为了独立于框架的dll，由作为框架插件的DiceDriver加载，具体能实现的接口视框架条件而不同。先驱跑路后，Dice!驱动器目前支持Mirai、LLOneBot、Chronocat、幻想乡、go-cqhttp等框架。由于不同版本适配进度不同，你可能无法找到以下所有版本。*Miria加载DiceDriver须使用MiraiNative插件。*
 
 #### QQ登录协议
 
-同一QQ在同一类型设备（手Q/电脑/平板）登录时会将原先设备挤占下线，因此骰娘在框架登录所用设备应与人工登录所用设备错开。
+同一QQ在同一类型设备（手Q/电脑/平板/手表）登录时会将原先设备挤占下线，因此骰娘在框架登录所用设备应与人工登录所用设备错开。
 
 #### 选择一个框架
 
@@ -134,21 +134,18 @@ MiraiAndroid是当前不使用模拟器在**手机挂载Dice**的唯一选择，
   3. 无法处理登录设备异常（但支持设备锁验证）
   5. 不能响应来自自己的消息
   6. 无法获取未加入群的群信息
-  7. **支持Windows, Linux, MacOS, Android**, iOS(停更中)
-- [HiMyQQ](https://forum.kokona.tech/d/1820-himyqq)：
-  1. 由于程序不支持附加调试，存在未排除的异常风险
-  2. 固定PC设备登录，协议可以选PC版QQ或者PC版TIM等
-  3. 允许多开QQ，支持扫码登录
-  4. 无法私聊发送语音文件
-- MyQQA（MQ安卓版）：
-  1. 由于程序不支持附加调试，存在未排除的异常风险
-  2. 支持手Q/平板登录
-  3. 允许多开QQ，但不支持启动自动登录
-  4. 选择手表协议登录时支持扫码登录
-  5. 接收好友申请时无法获取验证信息
-  6. 因为程序缺陷，会出现连接服务器失败、“与服务器北京时间相差超过1秒”等问题
-  7. 能接收频道消息，但发送频道消息疑似需要申请官方接口
+  7. 需要签名服务器
+  8.  **支持Windows, Linux, MacOS, Android**, iOS(停更中)
+- [幻想乡](https://forum.kokona.tech/d/2002-kuang-jia-zhi-nan-dicealterji-yu-huan-xiang-xiang-jie-ru-qqguan-fang-jie-kou)：
+  1. 可以通过在输入栏键入斜杠/呼出指令菜单，相比于提醒新人用help，降低了一定引导门槛
+  2. 可以从呼出菜单触屏调用，完全匹配指令可以免输入触发
+  3. 目前仅限企业主体的机器人支持在群内使用，而企业公司名在机器人资料页公开，
+  4. 无法接收除at外的群内消息，无法记录跑团log，无法响应除群内消息外的其他事件；（仅限公域）
+  5. 无法获取真实QQ和群号，无法主动获取群成员管理权限
+-  [LLOneBot](https://forum.kokona.tech/d/2019-dicellonebotda-jian-zhi-nan)：
+  1. 当前登录QQNT的所有账号都会骰娘化，不建议在有自用QQNT需求的电脑上搭建
 - go-cqhttp：
+  1. 需要使用签名服务器
   2. 支持手Q/平板/手表登录
   3. 不能多开QQ，但DiceDriver支持一键启动多个go-cqhttp.exe
   4. 支持扫码登录
