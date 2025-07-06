@@ -2,7 +2,7 @@
 
 手册更新时间：20220607
 
-*这是Dice!于2022.12.15更新2.6.6rc(638)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
+*这是Dice!于2025.6.4更新2.6.6rc(638)后对应的[Master手册](https://v2docs.kokona.tech/zh/latest/Master_Manual.html)*。<br>
 用户指令请参考[用户手册](https://v2docs.kokona.tech/zh/latest/User_Manual.html)。<br>
 更多内容可参看[Dice!论坛](https://forum.kokona.tech/)。<br>
 **本手册中[DiceData]一律指代Dice!存档目录，当前版本格式为[框架根目录]/Dice[DiceQQ]**
@@ -17,7 +17,7 @@
 
 ### 目录
 
-- [更新说明](#更新说明2.6.4)
+- [更新说明](#更新说明2.7.0)
   - [从2.5.0+版本升级](#从2.5.0+版本升级)
   - [从低版本升级到2.5.0+](#从低版本升级到2.5.0+)
 - [框架说明](#QQ框架Dice!2.5.0+)
@@ -40,7 +40,23 @@
 - [更新历史](#更新历史)
 - [后记](#后记)
 
-### 更新说明(2.6.6)
+### 更新说明(2.7.0)
+
+- 新增: game指令
+- 新增: 规则集专属指令
+- 新增: 支持JavaScript
+- 新增: 支持Python
+- 新增: log函数支持保存在特定文件名
+- 新增: rc/st跨角色卡
+- 新增: ri批量生成
+- 新增: 监听事件接受warning
+- 优化: 重做角色卡模板
+- 优化: webui依赖本地化
+- 优化: 内部字符编码统一为UTF-8
+- 优化: 重构回执转义机制
+- 优化: 修改掷骰上限为999枚，9999面
+
+#### 2.6.6
 
 - 新增: [变量赋值转义标识var](#文本转义标识)
 - 新增: 转义[send定向发送](#消息发送(.send))的消息
@@ -114,44 +130,31 @@
 - 可使用[WebUI](#WebUI配置面板)进行远程图形化配置，原设置插件/综合管理重定向至WebUI
 - .pc stat角色卡掷骰统计
 
-### QQ框架(Dice!2.5.0+)
+## 框架搭建
 
-2.5.0版本，Dice!本体由酷Q插件改为了独立于框架的dll，由作为框架插件的DiceDriver加载，具体能实现的接口视框架条件而不同。先驱跑路后，Dice!驱动器目前支持Mirai、MyQQ、MyQQA、OnoQQAir、go-cqhttp框架，也在跟进OvQQ等更新。由于不同版本适配进度不同，你可能无法找到以下所有版本。*Miria加载DiceDriver须使用MiraiNative插件。*
+2.5.0版本，Dice!本体由酷Q插件改为了独立于框架的dll，由作为框架插件的DiceDriver加载，具体能实现的接口视框架条件而不同。Dice!驱动器目前支持LLOneBot、NapCat、Lagrange、Mirai、go-cqhttp及所有支持OneBot11接口的框架。由于不同版本适配进度不同，你可能无法找到以下所有版本。
 
-#### QQ登录协议
+### QQ框架选择
 
-同一QQ在同一类型设备（手Q/电脑/平板）登录时会将原先设备挤占下线，因此骰娘在框架登录所用设备应与人工登录所用设备错开。
+同一QQ在同一类型**设备协议**（手Q/电脑/平板）登录时会将原先设备挤占下线，因此骰娘在框架登录所用设备应与人工登录所用设备错开。
 
-#### 选择一个框架
+#### go-cqhttp
 
-MiraiAndroid是当前不使用模拟器在**手机挂载Dice**的唯一选择，MiraiDice也支持在Linux、MacOS等系统挂载Dice，详见[Dice! 论坛 Mirai版教程](https://forum.kokona.tech/d/448-mirai-dice-20210324)。
+详见[Dice! 论坛Gocq指南](https://forum.kokona.tech/d/1590-dice-gocq)
 
-##### 框架接口差异
+1. 支持手Q/平板/手表协议登录
+2. 不能多开QQ，但DiceDriver支持一键启动多个go-cqhttp.exe
+3. （手表协议）支持扫码登录
 
-- Mirai2.*（MiraiNative转接）：
-  1. 支持手Q/平板登录
-  2. 不能多开QQ，启动即登录
-  3. 无法处理登录设备异常（但支持设备锁验证）
-  5. 不能响应来自自己的消息
-  6. 无法获取未加入群的群信息
-  7. **支持Windows, Linux, MacOS, Android**, iOS(停更中)
-- [HiMyQQ](https://forum.kokona.tech/d/1820-himyqq)：
-  1. 由于程序不支持附加调试，存在未排除的异常风险
-  2. 固定PC设备登录，协议可以选PC版QQ或者PC版TIM等
-  3. 允许多开QQ，支持扫码登录
-  4. 无法私聊发送语音文件
-- MyQQA（MQ安卓版）：
-  1. 由于程序不支持附加调试，存在未排除的异常风险
-  2. 支持手Q/平板登录
-  3. 允许多开QQ，但不支持启动自动登录
-  4. 选择手表协议登录时支持扫码登录
-  5. 接收好友申请时无法获取验证信息
-  6. 因为程序缺陷，会出现连接服务器失败、“与服务器北京时间相差超过1秒”等问题
-  7. 能接收频道消息，但发送频道消息疑似需要申请官方接口
-- go-cqhttp：
-  2. 支持手Q/平板/手表登录
-  3. 不能多开QQ，但DiceDriver支持一键启动多个go-cqhttp.exe
-  4. 支持扫码登录
+#### LLOnebot
+
+详见[Dice! 论坛LLOnebot指南](https://forum.kokona.tech/d/2019-llonebot)
+
+1. 基于QQNT实现，开销高于第三方无头QQ客户端
+
+#### ~~ShamRock~~
+
+#### ~~Mirai~~
 
 #### 框架目录结构
 
@@ -159,54 +162,38 @@ MiraiAndroid是当前不使用模拟器在**手机挂载Dice**的唯一选择，
 
 非Windows系统可能目录稍微不一致，但文档中提到的应该适用于任何操作系统。Android版目录位置为内部存储空间/Android/data/io.github.mzdluo123.mirai.android/files/
 
+### 通过OneBot接口在其他平台上搭建
+
 #### 2.5.0+版本升级
 
-- Mirai版本：执行Update.sh/更新.cmd
-- MiraiAndroid: 安装新版APK
-- 其他版本: 需要将更新版的w4123.Dice.dll放入Diceki文件夹替换旧文件，并重载DiceDriver插件；如果DiceDriver同时有新版则必须同步更新
+- 需要将更新版的w4123.Dice.dll放入Diceki文件夹替换旧文件，并重启DiceDriver；如果DiceDriver同时有新版则必须同步更新
 - 请关注论坛以获得具体版本的更新方法
 
-#### 从低版本升级到2.5.0+
-
-##### 迁移骰娘存档到整合包
-
-将对应版本的存档目录[DiceData]复制到新框架根目录下。
-
-- 原Dice2.4.0及以上版本：根目录下的Dice[DiceQQ]文件夹
-- 原Dice2.3.8exp9及以上版本酷Q骰娘：根目录下的DiceData文件夹![CQ根目录下的DiceData文件夹](_static/demo_cq_dicedata.png)
-
-如为原Dice2.3.8exp10(555)及以下版本：将data/app/com.w4123.dice复制到新目录[DiceData]/com.w4123.dice的位置。![data/app/com.w4123.dice](_static/demo_cq_appdata.png)
-
-##### Mirai框架升级
-
-1. 按照论坛中教程，使用新安装方法安装新版本Mirai
-2. 迁移Dice[DiceQQ]目录
-3. 将根目录下device.json复制到根目录下（让Mirai继续使用先前的登录信息）
-
-### WebUI配置面板（推荐）
+## WebUI配置面板
 
 WebUI是**全平台**可用的图形化配置页面，通过Dice!初始化时运行的监听端口访问。
 
 #### WebUI 基础使用
 
-在登录成功以后，Dice!会向Master(没有Master的情况下，自己) 发送WebUI运行的端口。如图中运行在8080端口。默认情况下，WebUI运行在一个随机的未使用的端口，但你可以通过WebUIPort属性更改。
+在登录成功以后，Dice!会向Master（若无Master则向自己）发送WebUI运行的端口。如图中运行在8080端口。默认情况下，WebUI运行在一个随机的未使用的端口，而你可以通过WebUIPort属性更改并固定。
 
 ![启动初始化](_static/WebUI_init.png)
 
 在本地(运行Dice的同一个设备)浏览器中输入`http://127.0.0.1:端口`进入WebUI **请一定要输入http://否则某些浏览器会卡死** <br>`.system gui`指令也会**引导打开WebUI**<br>如果你在远程访问WebUI，请确定已配置好防火墙等，并使用对应的IP地址或域名访问（而不是127.0.0.1）
 ![端口访问WebUI](_static/WebUI_login.png)
 
-提示登录时，默认用户名为admin，密码为password，进入WebUI后可在WebUI配置栏更改密码。WebUI默认只允许本地访问，所以如果设备只有你一个人能访问（不是共享的云服务器等）不更改密码也无所谓。
+提示登录时，默认用户名为admin，密码为password，进入WebUI后可在WebUI配置栏更改密码。WebUI默认只允许本地访问，所以如果设备只有你一个人能访问（不是共享的云服务器等）则更改密码是非必要的。
 ![主界面](_static/WebUI_main.png)
 
 可以在上面执行管理操作，应该都符合直觉。需要注意的是你可以直接点击表格修改其中内容，表格中的修改无需点击保存等，会在编辑完成后自动生效。
 
 #### WebUI 配置
 
-WebUI有三个配置项，更改配置后重启才会生效<br>
-`EnableWebUI` - 启用WebUI, 0为禁用, 1为启用, 默认为1<br>
-`WebUIPort` - WebUI端口, 0为随机, 其他为固定端口<br>
-`WebUIAllowInternetAccess` - 允许从非本地地址访问WebUI, 0为不允许, 1为允许, 默认为0, 也就是WebUI默认只能从本地访问。如果你使用Docker网络等，你可能需要将此项设置为1才能在Docker宿主机上访问WebUI。
+WebUI有三个配置项，更改配置后重启才会生效：
+
+- `EnableWebUI` - 启用WebUI, 0为禁用, 1为启用, 默认为1
+- `WebUIPort` - WebUI端口, 0为随机, 其他为固定端口
+- `WebUIAllowInternetAccess` - 允许从非本地地址访问WebUI, 0为不允许, 1为允许, 默认为0, 也就是WebUI默认只能从本地访问。如果你使用Docker网络等，你可能需要将此项设置为1才能在Docker宿主机上访问WebUI。
 
 #### WebUI 环境变量
 
@@ -224,9 +211,9 @@ WebUI 使用 HTTP Digest验证，密码保存为Digest，理论上比较安全�
 
 **任意Windows框架**可对骰娘发送`.system gui`打开图形界面（确认进入GUI，取消进入WebUI）。请注意此页面**仍可使用**，但将不会继续更新并有可能在未来版本移除，推荐使用上方提到的WebUI进行设置修改。
 
-(MiraiNative)右键**托盘图标（流泪猫猫头）->（插件菜单）Dice!->综合管理**![Mirai面板入口](_static/demo_mirai_gui_entry.png)
+~~(MiraiNative)右键**托盘图标（流泪猫猫头）->（插件菜单）Dice!->综合管理**~~
 
-(OQ等)**切换至插件列表页->Dice.Driver(右键)->设置插件。单框架多开时请使用指令，避免错乱**
+~~(OQ等)**切换至插件列表页->Dice.Driver(右键)->设置插件。单框架多开时请使用指令，避免错乱**~~
 
 可在界面内设置Master、调整用户信任、修改CustomMsg文本、修改全局配置
 
@@ -249,7 +236,7 @@ Master是骰娘的控制者，每个骰娘同时至多只能有一个Master。Ma
 
 #### 遥控开关
 
-- `.admin boton/botoff [群号]` //等效于所在群群管使用.bot on/off <br>
+- `.admin boton/botoff [群号]` //等效于所在群群管使用.bot on/off
 - `.dismiss [群号]` //可以遥控骰娘退出所在的群，即使骰娘不在，也能将该群移出白名单 
 
 #### 消息发送(.send)
@@ -258,11 +245,10 @@ send用于用户与管理员间的远程交流<br>
 `.send 待发送消息` （任何人可用）向Master发送消息<br>
 `.send [窗口] [待发送消息]` //向指定窗口发送消息（权限4限定；**权限5用户发送的消息不会标明转发来源，等效于骰娘亲自说话**)
 
-**窗口**是指QQ收发消息的聊天窗口。窗口参数识别一下6种格式:
+**窗口**是指聊天软件收发消息的聊天窗口。窗口参数识别一下格式:
 
-- qq [QQ号]
+- qq [用户ID] *在一些平台，机器人接口获取到的uid与用户资料中可见的ID并不一致，请注意*
 - group [群号]
-- discuss [讨论组号]
 - notice [通知类型]（仅send可用）
 - this（发送指令的窗口）
 - me（发送者的私聊窗口）
@@ -279,10 +265,9 @@ link用于管理员与特定窗口保持交流（尤其是新加入、待审核�
 
 #### 系统指令(.system)
 
-`.system save` //立即存储所有数据（相当于执行所有停用应用时的操作）  <br>
+`.system save` //立即存储所有用户数据（用户记录、群记录、角色卡）  <br>
 `.system load` //立即读取外置文件（模块、牌堆和角色卡模板）。便于不重载应用的反复调试。save/load涉及的文件见附录。  <br>
-`.system state` //显示插件运行时间及内存占用等硬件信息<br>
-`.system rexplorer` //杀死资源管理器后重启。当 Windows 服务器内存占用逐渐随时间而升高时，考虑由资源管理器逐渐占用内存导致，可能适用该指令。**权限5可用**。
+`.system state` //显示运行时间及内存占用等硬件信息
 
 #### 一键清群(.master groupclr)
 
@@ -797,6 +782,10 @@ servers:
         <<: *default # 引用默认中间件
 ```
 
+#### 无法启动此程序，因为计算机中丢失api-ms-win-core-path- l1-1-0.dll
+
+[下载api-ms-win-core-path-l1-1-0.dll](https://cn.dll-files.com/api-ms-win-core-path-l1-1-0.dll.html)放入Windows系统`C:/Windows/System32/`
+
 ### 磁盘空间占用增多
 
 - Mirai一键脚本使用.git更新文件，会造成.git文件夹堆积，如无回退需要可以直接删除；
@@ -819,10 +808,9 @@ Mirai启动时检测64位jre启动，而官方版本的MiraiNative只支持32位
 ## 附录
 
 #### 配置项目表
-详见WebUI`Master设置`页
+详见WebUI上`Master设置`页
 *注：Disabled是不可用的意思！*
 **指令禁用对信任4以上用户无效**
-*DisabledBlock仅在区分插件优先级的框架生效，高优先级插件将拦截事件而非传递给低优先级插件处理*
 *对.me特别处理的理由是其在跑团中几乎零作用，却可以制造骰娘自己说话的假象，引发风险。*
 
 #### 通知类型表

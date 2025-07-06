@@ -262,6 +262,8 @@ msg.echo("hello,world")
         |-- speech
         |   |-- rlobal_msg.yaml
         |
+        |-- rulebook
+        |
         |-- image
         |-- audio
 ```
@@ -354,7 +356,7 @@ action.lua = "heartbeat"
 
 - keyword: 触发该回复的关键词，可以有多种触发形式和多个关键词。
 - limit: 触发限制条件。table键值表示`条件类型=条件内容`。
-- echo: 回复内容。值为文本时，回复该文本；值为数组时，作为牌堆回复；值为表且形如`{lua=文件名}`时，调用lua文件。
+- echo: 回复内容。值为文本时，回复该文本；值为数组时，作为牌堆回复；值为表且形如`{lua=文件名}`时，调用lua文件；值为表且形如`{lua=function(msg) end}`时，直接调用lua函数。
 
 ##### lua格式
 
@@ -396,8 +398,6 @@ keyword.prefix = "晚安"
 limit = { cd = { user = 60 }, today = { user = 2 }}
 echo = "{reply_good_night}"
 ```
-
-
 
 #### script
 
@@ -725,14 +725,29 @@ JavaScript字符串连接时会自动类型转换
 
 ```javascript
 //js
-console.log("pi="+)
+console.log("pi="+Math.PI)
 ```
 python字符串连接时不会自动类型转换
 
-```python
+```python3
 #python
 pi = 3.14
 print("pi=" + str(pi))
+
+float() #转换为浮点型
+int() #转换为整形
+bin() #转换为2进制
+hex() #转换为16进制
+oct() #转换为8进制
+bool() #返回bool值
+list() #返回列表
+tuple() #返回元组
+dict() #返回字典对象
+set() #返回集合对象
+complex() #虚数转换
+bytes() #返回字节数组
+bytearry() #返回可变的字节数组
+str() #返回字符类型
 ```
 
 #### 字符串操作
@@ -815,7 +830,7 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 
 ### Context元表
 
-**语境Context**，用于交互event或reply中事件上下文信息，如uid、gid等。
+*(build602+)* **语境Context**，用于交互event或reply中事件上下文信息，如uid、gid等。
 
 #### get(self, field, defaultVal)
 
@@ -832,7 +847,7 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 
 #### format(self, rawString)
 
-在该语境下转义文本。
+*(build619+)* 在该语境下转义文本。
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>语境</td><td>Context</td><td>形如msg:format()可省略#1</td></tr>
@@ -843,7 +858,7 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 </tbody></table>
 #### echo(self, replyMsg, isRaw)
 
-回复消息，有来源聊天窗口的事件也可以用`event:echo(replyMsg)`。
+*(build602+)* 回复消息，有来源聊天窗口的事件也可以用`event:echo(replyMsg)`。
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>语境</td><td>Context</td><td>形如msg:echo()可省略#1</td></tr>
@@ -1002,17 +1017,17 @@ getUserConf(nil, "favor") --返回所有用户的favor列表
 <table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
 <tbody><tr><td>任意</td><td>待取值</td></tr>
 </tbody></table>
-
 <table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
 <tr><td>trust</td><td>用户信任（仅4以下可编辑）</td></tr>
 <tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
 <tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
-<tr><td>name*</td><td>用户账号昵称（只读）</td></tr>
-<tr><td>nick*</td><td>全局称呼（备取账号昵称）</td></tr>
-<tr><td>nick#`群号`*</td><td>特定群内的称呼（备取群名片->全局称呼->账号昵称）</td></tr>
-<tr><td>nn*</td><td>全局nn</td></tr>
-<tr><td>nn#`群号`*</td><td>特定群内的nn</td></tr>
+<tr><td>name</td><td>*用户账号昵称（只读）</td></tr>
+<tr><td>nick</td><td>*全局称呼（备取账号昵称）</td></tr>
+<tr><td>nick#群号</td><td>*特定群内的称呼（备取群名片->全局称呼->账号昵称）</td></tr>
+<tr><td>nn</td><td>*全局nn</td></tr>
+<tr><td>nn#群号</td><td>*特定群内的nn</td></tr>
 </tbody></table>
+
 
 
 ### setUserConf(userID, keyConf, val)
@@ -1040,17 +1055,18 @@ getGroupConf(msg.fromQQ, "rc房规", 0)
 <tbody><tr><td>任意</td><td>待取值</td></tr>
 </tbody></table>
 <table><thead><tr><th>特殊配置项</th><th>说明</th></tr></thead><tbody>
-<tr><td>name*</td><td>群名称（只读）</td></tr>
-<tr><td>size*</td><td>群人数（只读）</td></tr>
-<tr><td>maxsize*</td><td>群规模（只读）</td></tr>
+<tr><td>name</td><td>*群名称（只读）</td></tr>
+<tr><td>size</td><td>*群人数（只读）</td></tr>
+<tr><td>maxsize</td><td>*群规模（只读）</td></tr>
 <tr><td>firstCreate</td><td>用户记录创建（初次使用）时间 [时间戳，秒]</td></tr>
 <tr><td>lastUpdate</td><td>用户记录最后更新时间 [时间戳，秒]</td></tr>
-<tr><td>members</td><td>群用户列表</td></tr>
-<tr><td>admins</td><td>群管理列表</td></tr>
-<tr><td>card#`群员账号`*</td><td>群名片</td></tr>
-<tr><td>auth#`群员账号`*</td><td>群权限（只读） 1-群员;2-管理;3-群主</td></tr>
-<tr><td>lst#`群员账号`*</td><td>最后发言时间（只读） [时间戳，秒]</td></tr>
+<tr><td>members</td><td>(build615+)*群用户列表</td></tr>
+<tr><td>admins</td><td>(build615+)*群管理列表</td></tr>
+<tr><td>card#`群员账号`</td><td>(build615+)*群名片</td></tr>
+<tr><td>auth#`群员账号`</td><td>(build615+)*群权限（只读） 1-群员;2-管理;3-群主</td></tr>
+<tr><td>lst#`群员账号`</td><td>(build615+)*最后发言时间（只读） [时间戳，秒]</td></tr>
 </tbody></table>
+
 
 ### setGroupConf(groupID, keyConf, val)
 
@@ -1352,13 +1368,13 @@ getGroupConf(msg.fromQQ, "rc房规", 0)
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>掷骰表达式</td><td>string</td><td></td></tr>
 </tbody></table>
-
 <table><thead><tr><th>返回值字段</th><th>字段类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>expr</td><td>String</td><td>规范化后的表达式</td></tr>
-<tr><td>sum</td><td>Number</td><td>掷骰结果（表达式合法时）</td></tr>
+<tr><td>sum</td><td>int</td><td>掷骰结果（表达式合法时）</td></tr>
 <tr><td>expansion</td><td>String</td><td>掷骰展开式（表达式合法时）</td></tr>
-<tr><td>error</td><td>Number</td><td>错误类型（表达式非法时）</td></tr>
+<tr><td>error</td><td>int</td><td>错误类型（表达式非法时）</td></tr>
 </tbody></table>
+
 
 ### log(info[,notice_level])
 
@@ -1366,16 +1382,18 @@ getGroupConf(msg.fromQQ, "rc房规", 0)
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>日志内容</td><td>String</td><td>待输出日志内容</td></tr>
-<tr><td>通知窗口级别</td><td>Number</td><td>选填，若空则只输出到框架日志界面</td></tr>
+<tr><td>通知窗口级别</td><td>int</td><td>选填，若空则只输出到框架日志界面</td></tr>
 </tbody></table>
+
 
 ### getDiceID()
 
 取DiceMaid自身账号
 
 <table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead>
-<tbody><tr><td>Number</td><td>取骰子自身账号</td></tr>
+<tbody><tr><td>int</td><td>取骰子自身账号</td></tr>
 </tbody></table>
+
 ### getDiceDir()
 
 取Dice存档目录，用于自行读写文件
@@ -1399,9 +1417,10 @@ eventMsg({
 
 <table><thead><tr><th>输入参数/pkg子项</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>消息文本/fromMsg</td><td>String</td><td></td></tr>
-<tr><td>来源群/gid</td><td>Number</td><td>可以为空</td></tr>
-<tr><td>发送者/uid</td><td>Number</td><td></td></tr>
+<tr><td>来源群/gid</td><td>int</td><td>可以为空</td></tr>
+<tr><td>发送者/uid</td><td>int</td><td></td></tr>
 </tbody></table>
+
 
 
 ### sendMsg(msg, gid, uid)
@@ -1414,11 +1433,10 @@ sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
 
 <table><thead><tr><th>输入参数/pkg子项</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>fwdMsg</td><td>String</td><td>待发送消息</td></tr>
-<tr><td>gid</td><td>Number</td><td>私聊时为空</td></tr>
-<tr><td>uid</td><td>Number</td><td>群聊时可以为空</td></tr>
-<tr><td>chid</td><td>Number</td><td>频道id，仅参数包可用</td></tr>
+<tr><td>gid</td><td>int</td><td>私聊时为空</td></tr>
+<tr><td>uid</td><td>int</td><td>群聊时可以为空</td></tr>
+<tr><td>chid</td><td>int</td><td>频道id，仅参数包可用</td></tr>
 </tbody></table>
-
 
 ### getUserToday(userID, keyConf, defaultVal)
 
@@ -1429,7 +1447,7 @@ getUserToday(msg.uid, "jrrp")
 ```
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
-<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>用户账号</td><td>int</td><td></td></tr>
 <tr><td>配置项</td><td>String</td><td>待取配置项</td></tr>
 <tr><td>候补值</td><td>任意</td><td>配置项不存在时返回该值，为空则返回0</td></tr>
 </tbody></table>
@@ -1437,17 +1455,15 @@ getUserToday(msg.uid, "jrrp")
 <tr><td>任意</td><td>待取值</td></tr>
 </tbody></table>
 
-
 ### setUserToday(userID, keyConf, val)
 
 存用户今日数据项
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
-<tr><td>用户账号</td><td>Number</td><td></td></tr>
+<tr><td>用户账号</td><td>int</td><td></td></tr>
 <tr><td>配置项</td><td>String</td><td>待存配置项</td></tr>
 <tr><td>配置值</td><td>任意</td><td>待存入数据</td></tr>
 </tbody></table>
-
 
 ### getUserAttr(userID, keyConf, defaultVal)
 
@@ -1673,7 +1689,7 @@ event.listen_friend_add = {
 #### 代理好友申请
 
 ```lua
---script/listen_friend_requst.lua
+--script/listen_friend_request.lua
 answer = event.fromMsg
 --如果验证方式为回答问题，则需要截去问题部分
 -answer = string.sub(answer,string.find(answer,"答案：")+#"答案：")

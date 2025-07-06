@@ -1,6 +1,6 @@
 # Dice! 用户手册
 
-本手册对应Dice!2.6.5版本，为用户指令提供说明。管理权限使用的指令请参考[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)。[点此下载本手册](https://shiki.stringempty.xyz/download/Shiki_User_Manual.pdf)![](_static/demo_bot.jpg)
+本手册对应Dice!2.7.0beta5版本，为用户指令提供说明。管理权限使用的指令请参考[Master手册](https://shiki.stringempty.xyz/Manual/Shiki_Master_Manual.html)。[点此下载本手册](https://shiki.stringempty.xyz/download/Shiki_User_Manual.pdf)![](_static/demo_bot.jpg)
 
 [TOC]
 
@@ -65,16 +65,6 @@
 
 - `.send [反馈给Master的信息]` 	//将消息发送给Master
 
-## .rules 规则速查
-
-用法：.rules ([规则]):[待查词条] 或.rules set [规则]
-
-- `.rules 跳跃`					//复数规则有相同词条时，择一返回
-- `.rules COC：大失败`					//coc默认搜寻coc7的词条
-- `.rules dnd：语言`
-- `.rules set dnd`					//设置后优先查询dnd同名词条
-- `.rules set`					//清空默认规则，一般会先查询coc词条
-
 ## .r 普通掷骰指令
 
 用法：.r [掷骰表达式] ([掷骰原因]) 或.r [掷骰原因]
@@ -93,6 +83,64 @@
 - `.rs1D10+1D6+3 沙鹰伤害`				//省略单个骰子的点数，直接给结果
   //现版本开头的r不再可用o或d代替
   //一次掷骰超过20个将会自动排序
+
+## .game 游戏模式
+
+*Dice!2.7.0beta5以上版本可用*
+
+**一桌游戏**是记录游戏内容的单位，包括ob、log、deck、轮盘骰、先攻记录指令相关功能，以上指令会在触发时自动以当前窗口为Area创建一桌游戏。游戏指令只有GM或PL列表内的用户才会触发。
+
+游戏领域(Game Area)记录哪些聊天窗口会被计入该桌游戏，当Area包含多个群聊时，log将不会区分标注消息来自哪个群。
+
+- `.game new 桌名` 创建游戏（命名可省略）
+
+- `.game over` 销毁本桌游戏*（仅GM可用）*
+
+- `.game state` 查看本桌状态
+
+- `.game master` 登记为GM
+
+  *已有GM时，只有群管理可以成为新GM*
+
+- `.game set 属性=值` 游戏设置
+  例: `.game set rule=COC7`
+  `.game set 属性` 查看设置
+
+  *仅GM可用。*设置rule后，将仅调取规则集内指令、条目。
+
+- `.game call` at全体玩家*（仅GM可用）*
+
+- `.game join` 将自己加入玩家列表
+
+- `.game kick 玩家ID` 将玩家踢出游戏*（仅GM可用）*
+
+- `.game exit` 退出游戏
+
+- `.game open 桌号` 将当前窗口加入指定游戏的Area*（仅GM可用）*
+
+  例: `.game open 新游戏#1`
+
+- `.game close` 关闭当前游戏（本窗口从Area移除）
+
+- `.game rou 100` 设置(百面)轮盘骰*（仅GM可用）*
+  `.game rou 20*5` 设置20面轮盘骰，每个点数重复5次（总数不超过100）
+  `.game rou hist` 查看当轮记录
+  `.game rou clr` 清空轮盘骰
+  `.game rou reset` 还原轮盘骰
+
+### 轮盘骰
+
+`.game rou X*Y` 轮盘骰是将X面骰（如百面骰）实例化为一个俄罗斯轮盘，直到重置轮盘前，每个已经掷出的点数必出且仅出现Y次。*骰池不会触发轮盘骰机制，因为这将使其失去随机性。*
+
+## .rules 规则速查
+
+用法：.rules ([规则]):[待查词条] 或.rules set [规则]
+
+- `.rules 跳跃`					//复数规则有相同词条时，择一返回
+- `.rules COC：大失败`					
+- `.rules dnd：语言`
+- `.rules set dnd`					//设置后优先查询dnd同名词条
+- `.rules set`					//清空默认规则，一般会先查询coc词条
 
 ## .ob 旁观模式
 
@@ -170,10 +218,11 @@
 `.st力量:50 体质:55 体型:65 敏捷:45 外貌:70 智力:75 意志:35 教育:65 幸运:75`
 
 - `.st hp-1`					//+/-开头时，视为基于原值修改
-- `.st san+1D6`
+- `.st 卡特::san+1D6` //:
 - `.st &沙漠之鹰=1D10+1D6+3`  以&开头录入掷骰表达式，可被掷骰指令直接调用
 - `.st del kp裁决`					//删除已保存的属性
 - `.st clr`						//清空人物卡
+- `.st show 灵感`					//查看指定人物属性
 - `.st show 灵感`					//查看指定人物属性
 - `.st show` 						//无参数时查看所有属性（不含默认值技能），请使用**只st加点过技能**的半自动人物卡！
   //部分COC属性会被视为同义词，如智力/灵感、理智/san、侦查/侦察
@@ -230,10 +279,15 @@
 ##　.log 日志记录
 
 - `.log new 日志名` 另开日志并开始记录
+
 - `.log on` 继续记录
+
 - `.log off` 暂停记录
+
 - `.log end` 完成记录并发送日志文件
-日志名须作为文件名合法，省略则使用创建时间戳。上传有失败风险，届时请.send骰娘后台索取
+  日志名须作为文件名合法，省略则使用创建时间戳。上传有失败风险，届时请.send骰娘后台索取。
+
+  由于log以game为单位，.game close时将不再记录聊天内容，直到.game open。
 
 ## .sc 理智检定
 
