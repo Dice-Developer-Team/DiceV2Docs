@@ -896,12 +896,17 @@ Windows系统一般使用GBK字符集。Dice!支持utf-8及GBK两种字符集的
 
 ### log(info[,notice_level])
 
-*(build598+)*发送日志
+*(build598+)*生成指定通知类型的日志，可同时发送到复数类别通知窗口
+
+```lua
+log("这是一条通知",1,2)
+```
 
 <table><thead><tr><th>输入参数</th><th>变量类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>日志内容</td><td>string</td><td>待输出日志内容</td></tr>
 <tr><td>通知窗口级别</td><td>number</td><td>选填，若空则只输出到框架日志界面</td></tr>
 </tbody></table>
+
 
 ### loadLua(scriptName)
 
@@ -977,7 +982,7 @@ sendMsg("早安哟", msg.fromGroup, msg.fromQQ)
 
 ### getUserToday(userID, keyConf, defaultVal)
 
-取用户今日数据项。特别地，配置项为"jrrp"时，所取值同`.jrrp`结果。所有当日数据会在系统时间24时清空。
+取用户今日数据项。所有当日数据会在系统时间24时清空。
 
 ```lua
 getUserToday(msg.uid, "jrrp")
@@ -989,6 +994,10 @@ getUserToday(msg.uid, "jrrp")
 </tbody></table>
 <table><thead><tr><th>返回值类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>任意</td><td>待取值</td></tr>
+</tbody></table>
+<table><thead><tr><th>内嵌字段</th><th>说明</th></tr></thead><tbody>
+<tr><td>jrrp</td><td>今日人品（.jrrp结果，不存在时会从服务器统一获取并存入本地）</td></tr>
+<tr><td>frq</td><td>当日指令量（uid取0时，为全局总指令量）</td></tr>
 </tbody></table>
 
 ### setUserToday(userID, keyConf, val)
@@ -1027,8 +1036,6 @@ getUserConf(nil, "favor") --返回所有用户的favor列表
 <tr><td>nn</td><td>*全局nn</td></tr>
 <tr><td>nn#群号</td><td>*特定群内的nn</td></tr>
 </tbody></table>
-
-
 
 ### setUserConf(userID, keyConf, val)
 
