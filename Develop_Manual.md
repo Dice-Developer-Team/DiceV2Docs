@@ -983,6 +983,156 @@ msg_order[order_word_2] = "custom_order"
 --注意：本手册所提供脚本样例并非固定，仅基于模板化考虑选定该格式。
 ```
 
+## 调试方案
+
+### WebUI后台指令
+
+*(build670+)*Dice! WebUI后台指令页可以命令行形式输入语句，可选4种模式：
+
+- chat: 视为由骰娘账号发给自身的虚拟消息打印回复消息
+- js: 视为单条JavaScript表达式打印执行结果
+- py: 视为单条Python表达式打印执行结果
+- lua: 视为Lua脚本打印返回值（需要显式return）
+
+### 离线调试驱动器
+
+不可名状驱动器`DiceDriver.Nameless`不实连社交平台，使用本地文件虚构沙盒环境：
+
+- **输入**：命令行的每一行输入就是一条聊天消息；
+- **输出**：Dice! 的 `sendMsg` 以聊天记录的形式打印到命令行；
+- **资料**：用户、群、群成员、好友关系全部读自 `sandbox/` 下的 json 档案。
+
+可用来验证指令、牌堆、事件、mod 与三语脚本，无需登录，专注于代码逻辑。
+
+### 运行
+
+把 DiceDriver.Nameless.exe 放在含 `Diceki/w4123.Dice.dll` 的根目录下双击即可运行：
+
+```
+<运行目录>/
+  DiceDriver.Nameless.exe
+  Diceki/
+    w4123.Dice.dll      # 可放多个，驱动器取版本号最高者
+    driver.toml         # 可选
+  sandbox/              # 首次运行自动生成
+    user/<QQ号>.json
+    group/<群号>.json
+```
+
+`Diceki/driver.toml` 可选配置：
+
+```toml
+[nameless]
+servant_id = 1024          # 骰娘账号，默认 1024
+nick = "骰娘"              # 骰娘昵称，默认读 sandbox/user/{{servant_id}}.json
+sandbox = "sandbox"        # 沙盒目录，相对运行目录或绝对路径
+verbose = false            # 是否将log输出到命令行
+```
+
+存档目录按骰娘账号生成，即 `<运行目录>/Dice1024/`——**mod、plugin、selfdata、conf 都在这里**，与线上环境完全一致。启动时 Dice 的 WebUI 仍会监听一个随机本地端口（日志里会打印），行为与线上一致。
+
+### 控制台
+
+启动后进入聊天模式，提示符形如 `[群 梁山泊(100000)] 宋江(10001) > `，直接输入文本即发送：
+
+| 指令 | 说明 |
+| --- | --- |
+| `/g <群号>` | 切换到该群聊（必须带群号） |
+| `/p <QQ号>` | 切换到与该用户的私聊 |
+| `/u <QQ号>` | 设置群聊中的发言者，用来测不同权限 |
+| `/ls` | 列出 sandbox 中的用户与群 |
+| `/log` | 开关 Dice 调试日志（开启后插入 `· ` 开头的运行行） |
+| `/help` | 帮助 |
+| `/q` | 退出 |
+
+输出就是聊天记录。交互式终端里提示行本身已含输入内容，所以一次交互是「提示行 + 回复行」；管道喂入时终端不回显，驱动器会补一行输入记录，便于事后对日志。输出消息里的 CQ 码会被渲染成可读占位（`[图片]`、`[语音]`、`@账号`），可用来确认分段与 at 是否正确：
+
+```
+[群 梁山泊(100000)] 宋江(10001) > .r 1d20
+[群 梁山泊(100000)] 骰娘(1024): 及时雨掷骰: 1D20=17
+[群 梁山泊(100000)] 骰娘(1024): [图片] 伤害表已更新
+```
+
+Dice 的回复走自己的发送线程（`SendIntervalIdle` 默认 500ms），驱动器会在输出安静 300ms 后才回到提示符，最长等 3 秒。
+
+> **用管道喂输入时务必给足停顿。** 把若干行一次性灌进 stdin 然后立刻关闭，进程会在回复入队前就退出，表现为"指令没反应"。脚本化测试请写成 `(printf 'cmd\n'; sleep 3; printf 'cmd2\n'; sleep 3) | DiceDriver.Nameless.exe` 这种形式。
+
+### 沙盒档案
+
+首次运行会生成一套示例：梁山一百单八将（QQ = 10000 + 排名），以及包含全部成员的群 `100000`「梁山泊」，宋江为群主、卢俊义与吴用为管理。**已存在的档案不会被覆盖**，想重来就删掉整个 `sandbox/`。
+
+`sandbox/user/<QQ号>.json`：
+
+```json
+{
+  "qq": 10001,
+  "nickname": "宋江",
+  "title": "天魁星",
+  "sex": "unknown",
+  "friend": true
+}
+```
+
+`sandbox/group/<群号>.json`：
+
+```json
+{
+  "group_id": 100000,
+  "group_name": "梁山泊",
+  "max_member_count": 500,
+  "members": [
+    { "qq": 10001, "nickname": "宋江", "card": "及时雨", "title": "天魁星", "role": "owner" },
+    { "qq": 1024,  "nickname": "骰娘", "card": "",       "role": "admin" }
+  ]
+}
+```
+
+- `role` 取 `owner`/`admin`/`member`，直接决定 Dice! 的权限判定，测群管指令必须靠它；
+- `card` 非空时称呼优先用群名片；
+- `friend` 决定是否出现在好友列表，可测"拒生人私聊"；
+- 改完档案要重启驱动器——Dice! 对昵称、群名有 10 分钟缓存。
+
+### 调试 mod 与脚本
+
+把模块放进 `Dice1024/mod/`（json + 同名目录），或在 `Dice1024/plugin/` 放 lua 脚本，然后发 `.system load` 即可生效；`script/` 下的文件是调用时实时读取的，改完不必重载。
+
+用 Python 时要注意两点：运行时目录要放在**运行目录**（不是 `Diceki/`），并把开关写进 `Dice1024/conf/console.yaml`：
+
+```
+<运行目录>/python312/          # 含 python312.zip 或标准库目录
+```
+
+```yaml
+#Dice1024/conf/console.yaml
+config:
+  EnablePython: 1
+```
+
+重启后 `audit/log1024_<日期>.txt` 里应出现 `Python home: …` 与 `Python.Initialized`；没有这两行说明运行时没找到，对照[脚本语言嵌入说明](#脚本语言嵌入说明)的目录顺序排查。
+
+### 崩溃排查
+
+驱动器与 Dice! 在同一进程里，**Dice 一崩整个驱动器跟着退出**，控制台只留下一行半截输出。定位方法：
+
+1. 用带符号的配置构建本体，拿到 dll 与 pdb：
+
+   ```
+   cmake --build Dice/x86 --config RelWithDebInfo
+   ```
+
+2. 把 `x86/RelWithDebInfo/w4123.Dice.dll` 换进 `Diceki/`，用 Windows SDK 自带的 cdb（32 位驱动器要用 `Debuggers/x86/` 下的那份）非交互跑：
+
+   ```
+   cdb -o -g -G -c "g; .echo ===STACK===; kb; q" DiceDriver.Nameless.exe < input.txt
+   ```
+
+   命中访问违例后 `kb` 给出带函数名与行号的调用栈；需要看局部变量时把 `kb` 换成 `.ecxr; kb; frame N; dv`。
+
+### 已知限制
+
+- **只能输入纯文本**：没有真正的 at 列表、图片、撤回等协议层结构，涉及这些行为的逻辑仍需真驱动器验证；
+- **不模拟账号或网络异常**：发不出去、被风控、接口超时这类问题，离线环境复现不了。
+- **时间类事件要真等到时点**：测`cycle` 需要手动调整间隔；`DayEnd`/`DayNew` 只有跨过 0 点才触发，必要时改系统时间或`TimeZoneLag`；
 
 ## 开发帮助
 
